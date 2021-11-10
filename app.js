@@ -352,11 +352,11 @@ function createHelperGrids() {
     // Ground
     let gridHelper = new THREE.GridHelper(size, divisions, 0xff5555, 0x444488);
     scene.add(gridHelper);
-
-    //  Vertical
-    let gridGround = new THREE.GridHelper(size, divisions, 0x55ff55, 0x667744);
-    gridGround.rotation.x = Math.PI / 2;
-    scene.add(gridGround);
+    //
+    // //  Vertical
+    // let gridGround = new THREE.GridHelper(size, divisions, 0x55ff55, 0x667744);
+    // gridGround.rotation.x = Math.PI / 2;
+    // scene.add(gridGround);
 }
 
 
