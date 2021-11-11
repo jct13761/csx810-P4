@@ -220,6 +220,8 @@ function addAnotherTeapot() {
             },
         vertexShader: vShader,
         fragmentShader: fShader,
+        // fragmentShader: lambertLightFragmentShader(),
+        // vertexShader: lambertVertexShader(),
     });
 
     Bteapot = new THREE.Mesh(teapotGeometry, itemMaterial);
@@ -230,20 +232,45 @@ function addAnotherTeapot() {
     Bteapot.position.x = -6 * scale;
 }
 
-
 // using the code as a string from  app.html --
 function addBasicCube() {
     // get from header - just another method .
     let vShader = document.getElementById('cubeVertexShader').innerHTML;
     let fShader = document.getElementById('cubeFragmentShader').innerHTML;
-    let itemMaterial = new THREE.ShaderMaterial({
-        //Optional, here you can supply uniforms and attributes
-        vertexShader: vShader,
-        fragmentShader: fShader,
-    });
+
+    uniforms.colorA = {type: 'vec3', value: new THREE.Color(0x74ebd5)}
+    uniforms.colorB = {type: 'vec3', value: new THREE.Color(0xACB6E5)}
+
+
+    uniforms = THREE.UniformsUtils.merge([
+        uniforms,
+        THREE.UniformsLib['lights']
+    ])
+
+    let material = new THREE.ShaderMaterial({
+        uniforms: uniforms,
+        fragmentShader: lambertLightFragmentShader(),
+        vertexShader: lambertVertexShader(),
+        lights: true
+    })
+
+    // uniforms.colorA = {type: 'vec3', value: new THREE.Color(0x74ebd5)}
+    // let vector = new THREE.Vector3(light.direction);
+    //
+    // let itemMaterial = new THREE.ShaderMaterial({
+    //     //Optional, here you can supply uniforms and attributes
+    //     uniforms:
+    //         {
+    //             uLightDirection: {type: 'vec3', value: vector}
+    //         },
+    //     vertexShader: vShader,
+    //     fragmentShader: fShader,
+    //     // vertexShader: vertexShaderTEST(),
+    //     // fragmentShader: fragmentShaderTEST(),
+    // });
 
     let geometry = new THREE.BoxGeometry(1 * scale, 1 * scale, 1 * scale)
-    let mesh = new THREE.Mesh(geometry, itemMaterial);
+    let mesh = new THREE.Mesh(geometry, material);
 
     mesh.position.x = -2 * scale;
     scene.add(mesh)
@@ -264,7 +291,8 @@ function addAnotherBasicCube() // texture
 
     //Or, for non-jQuery kind of people
     let vShader = document.getElementById('cubeVertexShader').innerHTML;
-    let fShader = document.getElementById('AnotherCubeFragmentShader').innerHTML;
+    // let fShader = document.getElementById('AnotherCubeFragmentShader').innerHTML;
+    let fShader = document.getElementById('cubeFragmentShader').innerHTML;
     let itemMaterial = new THREE.ShaderMaterial({
         //Optional, here you can supply uniforms and attributes
         uniforms:
@@ -315,6 +343,69 @@ function fragmentShader() {
       void main() 
       {
         gl_FragColor = vec4(mix(colorA, colorB, vUv.z), 1.0);
+      }
+  `
+}
+
+function lambertVertexShader() {
+    // returns a string //  in  C program syntax '
+    return `
+    varying vec3 vUv; 
+    varying vec4 modelViewPosition; 
+    varying vec3 vecNormal;
+
+    void main() 
+    {
+      vUv = position; 
+      vec4 modelViewPosition = modelViewMatrix * vec4(position, 1.0);
+      vecNormal = (modelViewMatrix * vec4(normal, 0.0)).xyz; //????????
+      gl_Position = projectionMatrix * modelViewPosition; 
+    }
+  `
+}
+
+function lambertLightFragmentShader() {
+    return `
+      struct PointLight 
+      {
+        vec3 color;
+        vec3 position;
+        float distance; 
+      };  
+
+      uniform vec3 colorA; 
+      uniform vec3 colorB; 
+      uniform PointLight pointLights[NUM_POINT_LIGHTS];
+      varying vec3 vUv;
+      varying vec4 modelViewPosition; 
+      varying vec3 vecNormal; 
+
+      void main() 
+      {
+        // looping through all the point light and than apply magic
+        //https://csantosbh.wordpress.com/2014/01/09/custom-shaders-with-three-js-uniforms-textures-and-lighting/
+        
+        vec4 addedLights = vec4(0.0, 0.0, 0.0, 1.0);
+
+        for(int l = 0; l < NUM_POINT_LIGHTS; l++) 
+        {
+            vec3 lightDirection = normalize(modelViewPosition.xyz + pointLights[l].position);
+            addedLights.rgb += clamp(dot(-lightDirection, vecNormal), 0.0, 1.0) * pointLights[l].color
+               * 1.0; //'light intensity' 
+        }
+
+        //TODO get ambient light from THREE.js 
+        //logic at this point is: always add a constant float since ambient light is evenly distributed in the scene
+        //Not lambert direction is defintely not the same as the lambert material from three
+
+        vec3 redAndPoint = vec3(1.0 * addedLights.r, 1.0 * addedLights.g, 1.0 * addedLights.b);
+        //vec3 finalRed = vec3(redAndPoint.r + 0.3, 0.0, 0.0); 
+        vec3 finalWhite = vec3(redAndPoint.r + 0.3, redAndPoint.r + 0.3, redAndPoint.r + 0.3); 
+
+        vec3 colorAndPointLight = mix(colorB, colorB, vUv.z) * addedLights.rgb;
+        vec3 finalColor = vec3(colorAndPointLight.r + 0.3, colorAndPointLight.g + 0.3, colorAndPointLight.b + 0.3);
+
+        gl_FragColor = vec4(finalWhite, 1.0);
       }
   `
 }
