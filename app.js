@@ -223,6 +223,7 @@ function addPhongTeapot() {
         // fragmentShader: lambertLightFragmentShader(),
         // vertexShader: lambertVertexShader(),
     });
+    
 
     Bteapot = new THREE.Mesh(teapotGeometry, itemMaterial);
 
@@ -240,12 +241,8 @@ function addDiffuseShadingCube() {
 
     let material = new THREE.ShaderMaterial({
         //Optional, here you can supply uniforms and attributes
-        uniforms:
-            {
-                uLightDirection: {type: 'vec3', value: new THREE.Vector3(light.direction)}
-            },
-        vertexShader: normalVertexShader(),
-        fragmentShader: normalFragmentShader(),
+        vertexShader: diffuseVertexShader(),
+        fragmentShader: diffuseFragmentShader(),
     });
 
     let geometry = new THREE.BoxGeometry(1 * scale, 1 * scale, 1 * scale)
@@ -263,18 +260,14 @@ function addNormalShadingSphere() {
 
     let material = new THREE.ShaderMaterial({
         //Optional, here you can supply uniforms and attributes
-        uniforms:
-            {
-                uLightDirection: {type: 'vec3', value: new THREE.Vector3(light.direction)}
-            },
-        vertexShader: diffuseVertexShader(),
-        fragmentShader: diffuseFragmentShader(),
+        vertexShader: normalVertexShader(),
+        fragmentShader: normalFragmentShader(),
     });
 
-    let geometry = new THREE.BoxGeometry(1 * scale, 1 * scale, 1 * scale)
+    let geometry = new THREE.SphereGeometry( 1 * scale, 32, 16 )
     let mesh = new THREE.Mesh(geometry, material);
 
-    mesh.position.x = -2 * scale;
+    mesh.position.x = -10 * scale;
     scene.add(mesh)
     sceneObjects.push(mesh)
 }
@@ -433,6 +426,8 @@ function init() {
     addNormalMapTeapot();          // addTheeJSTeapot : rightmost
 
     addPhongTeapot();         // shader teapot.
+
+    addNormalShadingSphere();
 
     controls = [];
     controls.push(new Controller(Ateapot, 0));
@@ -783,7 +778,9 @@ function normalFragmentShader() {
 
 			//Calculate 'dot product'
   			// and clamp 0->1 instead of -1->1
-  			float dProd = max(0.0, vNormal);
+  			float r = max(0.0, vNormal.x);
+  			float g = max(0.0, vNormal.y);
+  			float b = max(0.0, vNormal.z);
 
   			// If the normal and light vector are equal (point in same direction),
   			// this returns 1 (fully lit)
@@ -791,7 +788,7 @@ function normalFragmentShader() {
   			// this returns -1 (which we make 0.0, and is completely dark).
 
  			//And output this color. // not sure why the color rotates with the cube.
-  			gl_FragColor = vec4( dProd, dProd, dProd, 1.0 );  //RGBA
+  			gl_FragColor = vec4(r, g, b, 1.0 );  //RGBA
 		}
     `
 }
