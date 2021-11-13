@@ -83,12 +83,11 @@ let shadingAlgorithmString = [
 ];
 
 
-
 function setSomeVariables(value) {
     console.log("stuff:" + value);
     console.log("stuff:" + shadingAlgorithmString[value]);
     shading = value;
-    
+
     teapotA.material = materialsArray[value];
     teapotA.material.needsUpdate = true;
 
@@ -139,7 +138,6 @@ function addBuiltInShadersTeapot()  // comparison teapot using library routines
         true,
         true
     );
-
 
 
     let wireMaterial = new THREE.MeshBasicMaterial({color: 0x7777ff, wireframe: true});
@@ -274,13 +272,53 @@ function addNormalShadingSphere() {
         fragmentShader: normalFragmentShader(),
     });
 
-    let geometry = new THREE.SphereGeometry( 1 * scale, 32, 16 )
+    let geometry = new THREE.SphereGeometry(1 * scale, 32, 16)
     let mesh = new THREE.Mesh(geometry, material);
 
     mesh.position.x = -10 * scale;
     scene.add(mesh)
     sceneObjects.push(mesh)
 }
+
+function addGlowShadingSphere() {
+    uniforms.glowColor = {type: 'vec3', value: new THREE.Vector3(0.8, 0.4, 0.1)}
+    uniforms.matColor = {type: 'vec3', value: new THREE.Vector3(0.0, 0.0, 0.0)}
+
+
+    let material = new THREE.ShaderMaterial({
+        //Optional, here you can supply uniforms and attributes
+        uniforms: uniforms,
+        vertexShader: glowVertexShader(),
+        fragmentShader: glowFragmentShader(),
+    });
+
+    let geometry = new THREE.SphereGeometry(1 * scale, 32, 16)
+    let mesh = new THREE.Mesh(geometry, material);
+
+    mesh.position.z = -3 * scale;
+    scene.add(mesh)
+    sceneObjects.push(mesh)
+}
+
+function addToonShadingSphere() {
+    // get from header - just another method.
+    // let vShader = document.getElementById('cubeVertexShader').innerHTML;
+    // let fShader = document.getElementById('cubeFragmentShader').innerHTML;
+
+    let material = new THREE.ShaderMaterial({
+        //Optional, here you can supply uniforms and attributes
+        vertexShader: toonVertexShader(),
+        fragmentShader: toonFragmentShader(),
+    });
+
+    let geometry = new THREE.SphereGeometry(1 * scale, 32, 16)
+    let mesh = new THREE.Mesh(geometry, material);
+
+    mesh.position.z = 3 * scale;
+    scene.add(mesh)
+    sceneObjects.push(mesh)
+}
+
 
 // using the code as a string from  app.html -- using texture
 function addDiffuseShadingCubeWithTexture() // texture
@@ -439,6 +477,10 @@ function init() {
 
     addNormalShadingSphere();
 
+    addGlowShadingSphere();
+
+    //addToonShadingSphere();
+
     controls = [];
     controls.push(new Controller(teapotA, 0));
     addControls(controls[0]);
@@ -459,17 +501,13 @@ function init() {
 // Experimental Shader
 // --------------------------------------------------
 function experimentalVertexShader() {
-    // returns a string //  in  C program syntax '
     return `
     varying vec3 vUv; 
     varying vec4 modelViewPosition; 
     varying vec3 vecNormal;
 
-    void main() 
-    {
+    void main() {
       vUv = position; 
-      
-      
       vec4 modelViewPosition = modelViewMatrix * vec4(position, 1.0);
       vecNormal = normalize((modelViewMatrix * vec4(normal, 0.0)).xyz); 
       gl_Position = projectionMatrix * modelViewPosition; 
@@ -478,14 +516,12 @@ function experimentalVertexShader() {
 }
 
 function experimentalFragmentShader() {
-    // returns a string //  in  C program syntax '
     return `
       uniform vec3 colorA; 
       uniform vec3 colorB; 
       varying vec3 vUv;
 
-      void main() 
-      {
+      void main() {
         gl_FragColor = vec4(mix(colorA, colorB, vUv.z), 1.0);
       }
   `
@@ -495,19 +531,15 @@ function experimentalFragmentShader() {
 // Diffuse Shader
 // --------------------------------------------------
 function diffuseVertexShader() {
-    // returns a string //  in  C program syntax '
     return `
-   // https://pandaqitutorials.com/Games/9-three-js-complete-glsl-tutorial
-		// ---Vertex Shader Code
-		//		Here's the space for variables
+        // https://pandaqitutorials.com/Games/9-three-js-complete-glsl-tutorial
 
 		varying vec3 	vNormal;
 		uniform vec3 	uLightDirection;
 		varying vec2 	vUv;
 
 		//The built-in main function
-		void main()
-		{
+		void main() {
  		 	//Every vertex shader must eventually set 'gl_Position'
   			//And in this case, we multiply the vertex position with the camera view and
   			// screen matrix to get the final output.
@@ -519,44 +551,32 @@ function diffuseVertexShader() {
   			vNormal = normalize(normalMatrix * normal);
   			//vNormal = normal;
 
-
     		//Get UV coordinates
   			vUv = uv;
 
-  			gl_Position = 	projectionMatrix *
-                			modelViewMatrix *
-                			vec4( position, 1.0 );
+  			gl_Position = 	projectionMatrix * modelViewMatrix * vec4( position, 1.0 );
 		}
   `
 }
 
 function diffuseFragmentShader() {
-    // returns a string //  in  C program syntax '
     return `
-     //Fragment Shader Code
+        //Fragment Shader Code
 		//  Works with a  lot of triangles, and  determines the colors for each pixel in them.
 		//  These are sent back and properly displayed on the monitor.
-		//
 
 		varying vec3 vNormal;
 		uniform vec3 uLightDirection;
-
 		varying vec2 vUv;
-		uniform sampler2D theTexture;
 
-		void main()
-		{
+		void main() {
             //Create a vector to determine where light comes from
   			// (similar to directional light in this case)
   			vec3 light = vec3(0.5, 0.2, 1.0);
-  			//vec3 light = uLightDirection;
 
   			//Normalize it
   			//shrinks all x,y and z all three values of the vector down to a value between 0 and 1.
   			light = normalize(light);
-
-
-			//vNormal = mat3(transpose(inverse(-light))) * aNormal;
 
 			//Calculate 'dot product'
   			// and clamp 0->1 instead of -1->1
@@ -566,8 +586,6 @@ function diffuseFragmentShader() {
   			// this returns 1 (fully lit)
   			// If they are completely opposite,
   			// this returns -1 (which we make 0.0, and is completely dark).
-
- 			//And output this color. // not sure why the color rotates with the cube.
   			gl_FragColor = vec4( dProd, dProd, dProd, 1.0 );  //RGBA
 		}
   `
@@ -578,27 +596,11 @@ function diffuseFragmentShader() {
 // --------------------------------------------------
 function diffuseFragmentShaderTexture() {
     return `
-    //Fragment Shader Code
-		//  Works with a  lot of triangles, and  determines the colors for each pixel in them.
-		//  These are sent back and properly displayed on the monitor.
-		//
-		//varying vec3 vNormal;
-		//uniform vec3 uLightDirection;
-
 		varying vec2 vUv;
 		uniform sampler2D theTexture;
 
-		void main()
-		{
-  			//Just as vertex shader, fragment shader must in the end set this variable (gl_FragColor)
-  			//We set it to a pink color, a very pink color
-  			gl_FragColor = vec4(	1.0,  // R
-                      				0.0,  // G
-                      				1.0,  // B
-                      				1.0); // A
-
+		void main() {
     		gl_FragColor = texture2D(theTexture, vUv);
-
 		}
     `
 }
@@ -607,14 +609,12 @@ function diffuseFragmentShaderTexture() {
 // Lambert Shader
 // --------------------------------------------------
 function lambertVertexShader() {
-    // returns a string //  in  C program syntax '
     return `
     varying vec3 vUv; 
     varying vec4 modelViewPosition; 
     varying vec3 vecNormal;
 
-    void main() 
-    {
+    void main() {
       vUv = position; 
       vec4 modelViewPosition = modelViewMatrix * vec4(position, 1.0);
       vecNormal = (modelViewMatrix * vec4(normal, 0.0)).xyz; //????????
@@ -625,8 +625,7 @@ function lambertVertexShader() {
 
 function lambertLightFragmentShader() {
     return `
-      struct PointLight 
-      {
+      struct PointLight {
         vec3 color;
         vec3 position;
         float distance; 
@@ -639,15 +638,13 @@ function lambertLightFragmentShader() {
       varying vec4 modelViewPosition; 
       varying vec3 vecNormal; 
 
-      void main() 
-      {
+      void main() {
         // looping through all the point light and than apply magic
         //https://csantosbh.wordpress.com/2014/01/09/custom-shaders-with-three-js-uniforms-textures-and-lighting/
         
         vec4 addedLights = vec4(0.0, 0.0, 0.0, 1.0);
 
-        for(int l = 0; l < NUM_POINT_LIGHTS; l++) 
-        {
+        for(int l = 0; l < NUM_POINT_LIGHTS; l++) {
             vec3 lightDirection = normalize(modelViewPosition.xyz + pointLights[l].position);
             addedLights.rgb += clamp(dot(-lightDirection, vecNormal), 0.0, 1.0) * pointLights[l].color
                * 1.0; //'light intensity' 
@@ -658,11 +655,10 @@ function lambertLightFragmentShader() {
         //Not lambert direction is defintely not the same as the lambert material from three
 
         vec3 redAndPoint = vec3(1.0 * addedLights.r, 1.0 * addedLights.g, 1.0 * addedLights.b);
-        //vec3 finalRed = vec3(redAndPoint.r + 0.3, 0.0, 0.0); 
         vec3 finalWhite = vec3(redAndPoint.r + 0.3, redAndPoint.r + 0.3, redAndPoint.r + 0.3); 
 
-        vec3 colorAndPointLight = mix(colorB, colorB, vUv.z) * addedLights.rgb;
-        vec3 finalColor = vec3(colorAndPointLight.r + 0.3, colorAndPointLight.g + 0.3, colorAndPointLight.b + 0.3);
+        //vec3 colorAndPointLight = mix(colorB, colorB, vUv.z) * addedLights.rgb;
+        //vec3 finalColor = vec3(colorAndPointLight.r + 0.3, colorAndPointLight.g + 0.3, colorAndPointLight.b + 0.3);
 
         gl_FragColor = vec4(finalWhite, 1.0);
       }
@@ -674,12 +670,10 @@ function lambertLightFragmentShader() {
 // --------------------------------------------------
 function phongVertexShader() {
     return `
-    // add code here
 	      	varying vec3 Normal;
       		varying vec3 Position;
 
-      		void main()
-      		{
+      		void main()	{
         		Normal = normalize(normalMatrix * normal);
         		Position = vec3(modelViewMatrix * vec4(position, 1.0));
         		gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
@@ -689,8 +683,6 @@ function phongVertexShader() {
 
 function phongFragmentShader() {
     return `
-    // add code here
-
       		varying vec3 Normal;
       		varying vec3 Position;
 
@@ -701,8 +693,7 @@ function phongFragmentShader() {
       		uniform vec3 LightIntensity;
       		uniform float Shininess;
 
-      		vec3 phong()
-      		{
+      		vec3 phong() {
        			vec3 n = normalize(Normal);
         		vec3 s = normalize(vec3(LightPosition) - Position);
         		vec3 v = normalize(vec3(-Position));
@@ -715,8 +706,7 @@ function phongFragmentShader() {
         		return LightIntensity * (ambient + diffuse + specular);
       		}
 
-      		void main()
-      		{
+      		void main()	{
         		gl_FragColor = vec4(phong(), 1.0);
       		}
     `
@@ -727,77 +717,37 @@ function phongFragmentShader() {
 // --------------------------------------------------
 function normalVertexShader() {
     return `
-    // https://pandaqitutorials.com/Games/9-three-js-complete-glsl-tutorial
-		// ---Vertex Shader Code
-		//		Here's the space for variables
-
 		varying vec3 	vNormal;
 		uniform vec3 	uLightDirection;
 		varying vec2 	vUv;
 
 		//The built-in main function
-		void main()
-		{
- 		 	//Every vertex shader must eventually set 'gl_Position'
-  			//And in this case, we multiply the vertex position with the camera view and
-  			// screen matrix to get the final output.
-
-  			// 'normal' is a standard value provided by Three.js for every vertex
-  			// just as 'position'
-
-  			//  normal = normalize(gl_NormalMatrix * gl_Normal);
+		void main() {
   			vNormal = normalize(normalMatrix * normal);
-  			//vNormal = normal;
-
-
+  			
     		//Get UV coordinates
   			vUv = uv;
 
-  			gl_Position = 	projectionMatrix *
-                			modelViewMatrix *
-                			vec4( position, 1.0 );
+  			gl_Position = 	projectionMatrix * modelViewMatrix * vec4( position, 1.0 );
 		}
     `
 }
+
 function normalFragmentShader() {
     return `
-    //Fragment Shader Code
-		//  Works with a  lot of triangles, and  determines the colors for each pixel in them.
-		//  These are sent back and properly displayed on the monitor.
-		//
-
 		varying vec3 vNormal;
 		uniform vec3 uLightDirection;
-
 		varying vec2 vUv;
 		uniform sampler2D theTexture;
 
-		void main()
-		{
-            //Create a vector to determine where light comes from
-  			// (similar to directional light in this case)
-  			//vec3 light = vec3(0.5, 0.2, 1.0);
-  			//vec3 light = uLightDirection;
-
-  			//Normalize it
-  			//shrinks all x,y and z all three values of the vector down to a value between 0 and 1.
-  			//light = normalize(light);
-
-
-			//vNormal = mat3(transpose(inverse(-light))) * aNormal;
-
-			//Calculate 'dot product'
+		void main() {
+			//Calculate 'dot product' of each color based on normal value
   			// and clamp 0->1 instead of -1->1
   			float r = max(0.0, vNormal.x);
   			float g = max(0.0, vNormal.y);
   			float b = max(0.0, vNormal.z);
 
-  			// If the normal and light vector are equal (point in same direction),
-  			// this returns 1 (fully lit)
-  			// If they are completely opposite,
-  			// this returns -1 (which we make 0.0, and is completely dark).
-
- 			//And output this color. // not sure why the color rotates with the cube.
+ 			//And output this color.
   			gl_FragColor = vec4(r, g, b, 1.0 );  //RGBA
 		}
     `
@@ -809,12 +759,32 @@ function normalFragmentShader() {
 // --------------------------------------------------
 function glowVertexShader() {
     return `
-    
+		varying vec3 	vNormal;
+		uniform vec3 	uLightDirection;
+		varying vec2 	vUv;
+
+		void main() {
+		    // normalize the normals
+  			vNormal = normalize(normalMatrix * normal);
+  			
+    		//Get UV coordinates
+  			vUv = uv;
+
+  			gl_Position = 	projectionMatrix * modelViewMatrix * vec4( position, 1.0 );
+		}
     `
 }
+
 function glowFragmentShader() {
     return `
-    
+		uniform vec3 glowColor; 
+        uniform vec3 matColor; 
+		varying vec3 vNormal;
+
+		void main() {
+			// lerp between the glowColor and matColor based on the normal's z value
+  			gl_FragColor = vec4(mix(glowColor, matColor, vNormal.z), 1.0);
+		}
     `
 }
 
@@ -826,6 +796,7 @@ function toonVertexShader() {
     
     `
 }
+
 function toonFragmentShader() {
     return `
     
@@ -840,6 +811,7 @@ function someVertexShader() {
     
     `
 }
+
 function someFragmentShader() {
     return `
     
