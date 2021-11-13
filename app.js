@@ -226,10 +226,10 @@ function addPhongTeapot() {
                 LightPosition: {value: new THREE.Vector4(0.0, 2000.0, 0.0, 1.0)},
                 Shininess: {value: 200.0}
             },
-        vertexShader: phongVertexShader(),
-        fragmentShader: phongFragmentShader(),
-        // fragmentShader: lambertLightFragmentShader(),
-        // vertexShader: lambertVertexShader(),
+        // vertexShader: phongVertexShader(),
+        // fragmentShader: phongFragmentShader(),
+        fragmentShader: glowFragmentShader(),
+        vertexShader: glowVertexShader(),
     });
 
 
@@ -282,7 +282,9 @@ function addNormalShadingSphere() {
 
 function addGlowShadingSphere() {
     uniforms.glowColor = {type: 'vec3', value: new THREE.Vector3(0.8, 0.4, 0.1)}
+    // uniforms.glowColor = {type: 'vec3', value: new THREE.Vector3(1.0, 0.68, 0)}
     uniforms.matColor = {type: 'vec3', value: new THREE.Vector3(0.0, 0.0, 0.0)}
+
 
 
     let material = new THREE.ShaderMaterial({
@@ -479,7 +481,7 @@ function init() {
 
     addGlowShadingSphere();
 
-    //addToonShadingSphere();
+    addToonShadingSphere();
 
     controls = [];
     controls.push(new Controller(teapotA, 0));
@@ -770,7 +772,7 @@ function glowVertexShader() {
     		//Get UV coordinates
   			vUv = uv;
 
-  			gl_Position = 	projectionMatrix * modelViewMatrix * vec4( position, 1.0 );
+  			gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );
 		}
     `
 }
@@ -794,12 +796,127 @@ function glowFragmentShader() {
 function toonVertexShader() {
     return `
     
-    `
+      
+    
+        //varying float intensity;
+        varying vec3 vNormal;
+
+
+        void main()
+        {
+
+	        vNormal = normalMatrix * normal;
+            // vNormal = normalize(normalMatrix * normal);
+
+            gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );
+        }
+    
+    
+        // varying vec3 	vNormal;
+		// uniform vec3 	uLightDirection;
+		// varying vec2 	vUv;
+        //
+		// void main() {
+		//     // normalize the normals
+  		// 	vNormal = normalize(normalMatrix * normal);
+  		//	
+    	// 	//Get UV coordinates
+  		// 	vUv = uv;
+        //
+  		// 	gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );
+		// }
+    
+        // uniform mat4 transform;
+        // uniform vec3 lightNormal;
+        //
+        // attribute vec4 vertex;
+        // attribute vec4 color;
+        //
+        // varying vec4 vertColor;
+        // varying vec3 vertNormal;
+        // varying vec3 vertLightDir;
+        //
+        // void main() {
+        //   gl_Position = transform * vertex;  
+        //   vertColor = color;
+        //   vertNormal = normalize(normalMatrix * normal);
+        //   vertLightDir = -lightNormal;
+        // }
+    `;
 }
 
 function toonFragmentShader() {
     return `
+
+       // uniform vec3 lightDir;
+        varying vec3 vNormal;
+
+        void main()
+        {
+
+            float intensity;
+            vec4 color;
+            vec3 light = vec3(0.1, 0.2, 1.0);
+            vec3 n = normalize(vNormal);
+            //intensity = dot(vec3(lightSource[0].position),n);
+            intensity = dot(light,normalize(vNormal));
+            //intensity = dot(lightDir,vNormal);
+
+            if (intensity > 0.95)
+                color = vec4(1.0,0.5,0.5,1.0);
+            else if (intensity > 0.5)
+                color = vec4(0.6,0.3,0.3,1.0);
+            else if (intensity > 0.25)
+                color = vec4(0.4,0.2,0.2,1.0);
+            else
+                color = vec4(0.2,0.1,0.1,1.0);
+            gl_FragColor = color;
+
+        }
     
+    
+        // varying vec3 vNormal;
+        // void main()
+        // {
+        //     vec3 LightPosition = vec3(10.0, 10.0, 20.0);
+        //
+        //     vec4 color1 = frontMaterial.diffuse;
+        //     vec4 color2;
+        //
+        //     float intensity = dot(normalize(LightPosition),Normal);
+        //
+        //     if (intensity > 0.95)      color2 = vec4(1.0, 1.0, 1.0, 1.0);
+        //     else if (intensity > 0.75) color2 = vec4(0.8, 0.8, 0.8, 1.0);
+        //     else if (intensity > 0.50) color2 = vec4(0.6, 0.6, 0.6, 1.0);
+        //     else if (intensity > 0.25) color2 = vec4(0.4, 0.4, 0.4, 1.0);
+        //     else                       color2 = vec4(0.2, 0.2, 0.2, 1.0);
+        //
+        //     gl_FragColor = color1 * color2;
+        // }
+        
+        // uniform float fraction;
+        //
+        // varying vec4 vertColor;
+        // varying vec3 vertNormal;
+        // varying vec3 vertLightDir;
+        //
+        // void main() {  
+        //   float intensity;
+        //   vec4 color;
+        //   intensity = max(0.0, dot(vertLightDir, vertNormal));
+        //
+        //   if (intensity > pow(0.95, fraction)) {
+        //     color = vec4(vec3(1.0), 1.0);
+        //   } else if (intensity > pow(0.5, fraction)) {
+        //     color = vec4(vec3(0.6), 1.0);
+        //   } else if (intensity > pow(0.25, fraction)) {
+        //     color = vec4(vec3(0.4), 1.0);
+        //   } else {
+        //     color = vec4(vec3(0.2), 1.0);
+        //   }
+        //
+        //   gl_FragColor = color * vertColor;  
+        // }
     `
 }
 
