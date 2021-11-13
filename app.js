@@ -48,8 +48,11 @@ let scale = 2;
 
 let textureMap;
 
-let Ateapot;
-let Bteapot;
+let teapotA;
+let teapotB;
+let materialsArray = [];
+let teapotGeometry;
+let shading = 0;
 
 let shadingAlgorithm = [
     {
@@ -61,7 +64,7 @@ let shadingAlgorithm = [
         Phong: 5,
         Lambert: 6,
         Gourard: 7,
-        Text: 8,
+        Texture: 8,
 
     },
 ];
@@ -73,19 +76,23 @@ let shadingAlgorithmString = [
     'Glow',
     'Toon',
     'Phong',
-
     'Lambert',
     'Gourard',
-    'Text',
+    'Texture',
 
 ];
 
-let shading = 0;
+
 
 function setSomeVariables(value) {
     console.log("stuff:" + value);
     console.log("stuff:" + shadingAlgorithmString[value]);
     shading = value;
+    
+    teapotA.material = materialsArray[value];
+    teapotA.material.needsUpdate = true;
+
+    // teapotGeometry.attributes.color.needsUpdate = true;
 }
 
 function addControls(controlObject) {
@@ -93,11 +100,13 @@ function addControls(controlObject) {
     gui.add(controlObject, 'rotationSpeed', -0.01, 0.01).step(0.01);
     gui.add(controlObject, 'scale', 0, 2).step(0.1);
     gui.add(controlObject, 'Shader', shadingAlgorithm[0]).onChange(setSomeVariables);
+    // gui.add(controlObject, 'shear_a', -5, 5).step(0.1);
+
 }
 
 
 // using the code as a string from  app.html --
-function addNormalMapTeapot()  // comparison teapot using library routines
+function addBuiltInShadersTeapot()  // comparison teapot using library routines
 {
     let teapotSize = 1 * scale;
     let tess = -1;	// force initialization
@@ -122,7 +131,7 @@ function addNormalMapTeapot()  // comparison teapot using library routines
     let textureCube = new THREE.CubeTextureLoader().load(urls);
     textureCube.encoding = THREE.sRGBEncoding;
 
-    const teapotGeometry = new TeapotBufferGeometry(
+    teapotGeometry = new TeapotBufferGeometry(
         teapotSize,
         tess,
         true,
@@ -131,10 +140,11 @@ function addNormalMapTeapot()  // comparison teapot using library routines
         true
     );
 
-    let thematerials = [];
+
 
     let wireMaterial = new THREE.MeshBasicMaterial({color: 0x7777ff, wireframe: true});
-    thematerials.push(wireMaterial);
+    wireMaterial.needsUpdate = true;
+    materialsArray.push(wireMaterial);
 
     let flatMaterial = new THREE.MeshPhongMaterial({
         color: materialColor,
@@ -142,42 +152,42 @@ function addNormalMapTeapot()  // comparison teapot using library routines
         flatShading: true,
         side: THREE.DoubleSide
     });
-    thematerials.push(flatMaterial);
+    materialsArray.push(flatMaterial);
 
     let normalMaterial = new THREE.MeshNormalMaterial({color: 0x7777ff});
-    thematerials.push(normalMaterial);
+    materialsArray.push(normalMaterial);
 
     let glowMaterial = new THREE.MeshPhongMaterial({color: materialColor, envMap: textureCube, side: THREE.DoubleSide});
-    thematerials.push(glowMaterial);
+    materialsArray.push(glowMaterial);
 
     //let toonMaterial       = new THREE.MeshToonMaterial( { color: 0x7777ff  } );
     let toonMaterial = new THREE.MeshToonMaterial({color: 0x7777ff});
-    thematerials.push(toonMaterial);
+    materialsArray.push(toonMaterial);
 
     let phongMaterial = new THREE.MeshPhongMaterial({color: materialColor, side: THREE.DoubleSide});
-    thematerials.push(phongMaterial);
+    materialsArray.push(phongMaterial);
 
     let lambertMaterial = new THREE.MeshLambertMaterial({color: materialColor, side: THREE.DoubleSide});
-    thematerials.push(lambertMaterial);
+    materialsArray.push(lambertMaterial);
 
     let gouraudMaterial = new THREE.MeshLambertMaterial({color: materialColor, side: THREE.DoubleSide});
-    thematerials.push(gouraudMaterial);
+    materialsArray.push(gouraudMaterial);
 
     let texturedMaterial = new THREE.MeshPhongMaterial({color: materialColor, map: textureMap, side: THREE.DoubleSide});
-    thematerials.push(texturedMaterial);
+    materialsArray.push(texturedMaterial);
 
-    console.log("inShader:" + shadingAlgorithmString[shading]);
+    //console.log("inShader:" + shadingAlgorithmString[shading]);
 
     // redraw the teapot ----- (not done here )
     shading = 2;
-    Ateapot = new THREE.Mesh(
+    teapotA = new THREE.Mesh(
         teapotGeometry,
-        thematerials[shading]);
+        materialsArray[shading]);
 
-    scene.add(Ateapot);
-    teapotObjects.push(Ateapot);
+    scene.add(teapotA);
+    teapotObjects.push(teapotA);
 
-    Ateapot.position.x = 6 * scale;
+    teapotA.position.x = 6 * scale;
 }
 
 
@@ -195,7 +205,7 @@ function addPhongTeapot() {
     // let vShader = document.getElementById('teapotVertexShader').innerHTML;
     // let fShader = document.getElementById('teapotFragmentShader').innerHTML;
 
-    const teapotGeometry = new TeapotBufferGeometry(
+    const teapotGeometry2 = new TeapotBufferGeometry(
         teapotSize,
         tess,
         true,
@@ -223,14 +233,14 @@ function addPhongTeapot() {
         // fragmentShader: lambertLightFragmentShader(),
         // vertexShader: lambertVertexShader(),
     });
-    
 
-    Bteapot = new THREE.Mesh(teapotGeometry, itemMaterial);
 
-    scene.add(Bteapot);
-    teapotObjects.push(Bteapot);
+    teapotB = new THREE.Mesh(teapotGeometry2, itemMaterial);
 
-    Bteapot.position.x = -6 * scale;
+    scene.add(teapotB);
+    teapotObjects.push(teapotB);
+
+    teapotB.position.x = -6 * scale;
 }
 
 // using the code as a string from  app.html --
@@ -393,7 +403,7 @@ class Controller {
         // available data for the instantiations of the function
         this.rotationSpeed = 0.00;
         this.scale = 1;
-        this.Shader = 1;
+        this.Shader = shading;
         this.theta = 0.1;
         this.parameters = {a: false,}
     }
@@ -423,14 +433,14 @@ function init() {
 
     addExperimentalShaderCube();      // on right
 
-    addNormalMapTeapot();          // addTheeJSTeapot : rightmost
+    addBuiltInShadersTeapot();          // addTheeJSTeapot : rightmost
 
     addPhongTeapot();         // shader teapot.
 
     addNormalShadingSphere();
 
     controls = [];
-    controls.push(new Controller(Ateapot, 0));
+    controls.push(new Controller(teapotA, 0));
     addControls(controls[0]);
 
     createHelperGrids();
