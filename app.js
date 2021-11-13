@@ -228,8 +228,8 @@ function addPhongTeapot() {
             },
         // vertexShader: phongVertexShader(),
         // fragmentShader: phongFragmentShader(),
-        fragmentShader: glowFragmentShader(),
-        vertexShader: glowVertexShader(),
+        fragmentShader: toonFragmentShader(),
+        vertexShader: toonVertexShader(),
     });
 
 
@@ -856,10 +856,10 @@ function toonFragmentShader() {
 
             float intensity;
             vec4 color;
-            vec3 light = vec3(0.1, 0.2, 1.0);
-            vec3 n = normalize(vNormal);
+            vec3 light = normalize(vec3(-0.9, 0.3, 0.3));
+            //vec3 n = normalize(vNormal);
             //intensity = dot(vec3(lightSource[0].position),n);
-            intensity = dot(light,normalize(vNormal));
+            intensity = dot(light,vNormal);
             //intensity = dot(lightDir,vNormal);
 
             if (intensity > 0.95)
