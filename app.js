@@ -54,6 +54,29 @@ let materialsArray = [];
 let teapotGeometry;
 let shading = 0;
 
+// toonShader stuff
+let toonColor = 0;
+let toonNumLayers = 0;
+let toonStartingBound = 0.8;
+let toonColorIntensityPerStep = 0.15;
+
+// Phong Shader stuff
+let phongAmbientX = 0.9;
+let phongAmbientY = 0.3;
+let phongAmbientZ = 0.9;
+// let phongAmbient = new THREE.Vector3(phongAmbientX, phongAmbientY, phongAmbientZ);
+let phongDiffuseX = 0.9;
+let phongDiffuseY = 0.5;
+let phongDiffuseZ = 0.3;
+// let phongDiffuse = new THREE.Vector3(phongDiffuseX, phongDiffuseY, phongDiffuseZ);
+let phongSpecularX = 0.8;
+let phongSpecularY = 0.8;
+let phongSpecularZ = 0.8;
+// let phongSpecular = new THREE.Vector3(phongSpecularX, phongSpecularY, phongSpecularZ);
+let phongLightIntensity = new THREE.Vector4(0.5, 0.5, 0.5, 1.0);
+let phongLightPosition = new THREE.Vector4(0.0, 2000.0, 0.0, 1.0);
+let phongShininess = 200.0;
+
 let shadingAlgorithm = [
     {
         WireFrame: 0,  /**/
@@ -178,9 +201,7 @@ function addBuiltInShadersTeapot()  // comparison teapot using library routines
 
     // redraw the teapot ----- (not done here )
     shading = 2;
-    teapotA = new THREE.Mesh(
-        teapotGeometry,
-        materialsArray[shading]);
+    teapotA = new THREE.Mesh(teapotGeometry, materialsArray[shading]);
 
     scene.add(teapotA);
     teapotObjects.push(teapotA);
@@ -194,44 +215,28 @@ function addPhongTeapot() {
     let teapotSize = 1 * scale;
     let tess = -1;	// force initialization
 
-    teapotSize = 1 * scale;
-    //tess          = 5;
+    const teapotGeometry2 = new TeapotBufferGeometry(teapotSize, tess, true, true, true, true);
 
-    let materialColor = new THREE.Color();
-    materialColor.setRGB(1.0, 0, 0);
-
-    // let vShader = document.getElementById('teapotVertexShader').innerHTML;
-    // let fShader = document.getElementById('teapotFragmentShader').innerHTML;
-
-    const teapotGeometry2 = new TeapotBufferGeometry(
-        teapotSize,
-        tess,
-        true,
-        true,
-        true,
-        true
-    );
-
-    let wireMaterial = new THREE.MeshBasicMaterial({color: 0xff0066, wireframe: true});
-    let phongMaterial = new THREE.MeshPhongMaterial({color: materialColor, side: THREE.DoubleSide});
 
     let itemMaterial = new THREE.ShaderMaterial({
         //Optional, here you can supply uniforms and attributes
         uniforms:
             {
-                Ka: {value: new THREE.Vector3(0.9, 0.5, 0.3)},
-                Kd: {value: new THREE.Vector3(0.9, 0.5, 0.3)},
-                Ks: {value: new THREE.Vector3(0.8, 0.8, 0.8)},
-                LightIntensity: {value: new THREE.Vector4(0.5, 0.5, 0.5, 1.0)},
-                LightPosition: {value: new THREE.Vector4(0.0, 2000.0, 0.0, 1.0)},
-                Shininess: {value: 200.0}
+                Ka: {value: new THREE.Vector3(phongAmbientX, phongAmbientY, phongAmbientZ)}, // the color
+                Kd: {value: new THREE.Vector3(phongDiffuseX, phongDiffuseY, phongDiffuseZ)},
+                Ks: {value: new THREE.Vector3(phongSpecularX, phongSpecularY, phongSpecularZ)},
+                // Ka: {value: phongAmbient}, // the color
+                // Kd: {value: phongDiffuse},
+                // Ks: {value: phongSpecular},
+                LightIntensity: {value: phongLightIntensity},
+                LightPosition: {value: phongLightPosition},
+                Shininess: {value: phongShininess}
             },
-        // vertexShader: phongVertexShader(),
-        // fragmentShader: phongFragmentShader(),
-        fragmentShader: toonFragmentShader(),
-        vertexShader: toonVertexShader(),
+        vertexShader: phongVertexShader(),
+        fragmentShader: phongFragmentShader(),
+        // fragmentShader: toonFragmentShader(),
+        // vertexShader: toonVertexShader(),
     });
-
 
     teapotB = new THREE.Mesh(teapotGeometry2, itemMaterial);
 
@@ -286,7 +291,6 @@ function addGlowShadingSphere() {
     uniforms.matColor = {type: 'vec3', value: new THREE.Vector3(0.0, 0.0, 0.0)}
 
 
-
     let material = new THREE.ShaderMaterial({
         //Optional, here you can supply uniforms and attributes
         uniforms: uniforms,
@@ -307,8 +311,20 @@ function addToonShadingSphere() {
     // let vShader = document.getElementById('cubeVertexShader').innerHTML;
     // let fShader = document.getElementById('cubeFragmentShader').innerHTML;
 
+    toonColor = new THREE.Color(0x660033);
+    toonNumLayers = 5;
+    toonStartingBound = 0.8;
+    toonColorIntensityPerStep = 0.15;
+
+    uniforms.mainColor = {type: 'vec3', value: toonColor};
+    uniforms.numLayers = {type: 'int', value: toonNumLayers};
+    uniforms.startingBound = {type: 'float', value: toonStartingBound};
+    uniforms.colorIntensityPerStep = {type: 'float', value: toonColorIntensityPerStep};
+
+
     let material = new THREE.ShaderMaterial({
         //Optional, here you can supply uniforms and attributes
+        uniforms: uniforms,
         vertexShader: toonVertexShader(),
         fragmentShader: toonFragmentShader(),
     });
@@ -795,94 +811,141 @@ function glowFragmentShader() {
 // --------------------------------------------------
 function toonVertexShader() {
     return `
-    
-      
-    
-        //varying float intensity;
         varying vec3 vNormal;
+        uniform int numLayers;
 
-
-        void main()
-        {
-
+        void main() {
 	        vNormal = normalMatrix * normal;
             // vNormal = normalize(normalMatrix * normal);
-
             gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );
         }
-    
-    
-        // varying vec3 	vNormal;
-		// uniform vec3 	uLightDirection;
-		// varying vec2 	vUv;
-        //
-		// void main() {
-		//     // normalize the normals
-  		// 	vNormal = normalize(normalMatrix * normal);
-  		//	
-    	// 	//Get UV coordinates
-  		// 	vUv = uv;
-        //
-  		// 	gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );
-		// }
-    
-        // uniform mat4 transform;
-        // uniform vec3 lightNormal;
-        //
-        // attribute vec4 vertex;
-        // attribute vec4 color;
-        //
-        // varying vec4 vertColor;
-        // varying vec3 vertNormal;
-        // varying vec3 vertLightDir;
-        //
-        // void main() {
-        //   gl_Position = transform * vertex;  
-        //   vertColor = color;
-        //   vertNormal = normalize(normalMatrix * normal);
-        //   vertLightDir = -lightNormal;
-        // }
     `;
 }
 
 function toonFragmentShader() {
     return `
-
-       // uniform vec3 lightDir;
         varying vec3 vNormal;
+        uniform vec3 mainColor;
+        uniform int numLayers;
+        uniform float startingBound;
+        uniform float colorIntensityPerStep;
 
-        void main()
-        {
-
+        void main() {
             float intensity;
-            vec4 color;
             vec3 light = normalize(vec3(-0.9, 0.3, 0.3));
-            //vec3 n = normalize(vNormal);
-            //intensity = dot(vec3(lightSource[0].position),n);
             intensity = dot(light,vNormal);
-            //intensity = dot(lightDir,vNormal);
-
-            if (intensity > 0.95)
-                color = vec4(1.0,0.5,0.5,1.0);
-            else if (intensity > 0.5)
-                color = vec4(0.6,0.3,0.3,1.0);
-            else if (intensity > 0.25)
-                color = vec4(0.4,0.2,0.2,1.0);
-            else
-                color = vec4(0.2,0.1,0.1,1.0);
+            // vec4 color;
+            vec4 color = vec4(mainColor, 1.0);
+            
+            //// the number of steps on the texture
+            int stepNum = numLayers; 
+            //// the float version of steps
+            float stepNum_float = float(stepNum);
+            //// save the value of the previous step to compare the next step to 
+            float stepOld = 0.0;
+            //// calculates the amount of intensity to subtract on each subsequent iteration
+            float step = 2.0/stepNum_float;
+            //// the start value of the intensity to check against
+            float start = startingBound;
+            //// how much to decrease the color by (how much darker to make it each step)
+            float colorIntensity = colorIntensityPerStep;
+            //// save the color of the previous step
+            vec4 oldColor = vec4(0,0,0, 1.0);
+            //// used to calculate the very end color so its not just black
+            float i_float = 0.0;
+            
+            // // set the darkest end's color 
+            // if (intensity < 0.8) {
+            //     // color = vec4(mainColor, 1.0);
+            //     // color = vec4(0,0,0, 1.0); // make the end always black
+            //     // color = vec4((mainColor/(1.0+(stepNum_float*(colorIntensity * (2.0*stepNum_float))))), 1.0);
+            // } // if
+            
+            // iterate over the number of steps to add to the toon shader
+            for (int i = 0; i < stepNum; i++) {
+                // cast i to a float
+                i_float = float(i);
+                // calculate the intensity step for the lower bound
+                float intensityStep = (start-(i_float*step));
+                // if the intensity is less than the old step's upper bound 
+                if (intensity < stepOld) {
+                     // if the intensity is more than the current lower bound  
+                     if (intensity > intensityStep) {
+                         // save the current color to the old color value
+                         oldColor = vec4((mainColor/(1.0+(i_float*colorIntensity))), 1.0);
+                         // set the color to the current color
+                         color = oldColor;
+                     } // if 
+                } // if 
+                colorIntensity = colorIntensity * 2.0;
+                stepOld = intensityStep;
+            } // if
+            
+            if (intensity < stepOld)
+                color = oldColor;
+           
             gl_FragColor = color;
-
         }
-    
-    
+    `
+}
+
+/* OLD Vertex Shader
+        // varying vec3 	vNormal;
+		// uniform vec3 	uLightDirection;
+		// varying vec2 	vUv;
+		// void main() {
+		//     // normalize the normals
+  		// 	vNormal = normalize(normalMatrix * normal);
+    	// 	//Get UV coordinates
+  		// 	vUv = uv;
+  		// 	gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );
+		// }
+
+        // uniform mat4 transform;
+        // uniform vec3 lightNormal;
+        // attribute vec4 vertex;
+        // attribute vec4 color;
+        // varying vec4 vertColor;
+        // varying vec3 vertNormal;
+        // varying vec3 vertLightDir;
+        //
+        // void main() {
+        //   gl_Position = transform * vertex;
+        //   vertColor = color;
+        //   vertNormal = normalize(normalMatrix * normal);
+        //   vertLightDir = -lightNormal;
+        // }
+ */
+
+/* OLD Fragment Shader
+
+           // if (intensity > (start-(0.0*step))) {  // 1.0-0.8
+           //      //color = vec4(1.0,0.5,0.5,1.0);
+           //       color = vec4((mainColor/1.0), 1.0);
+           //  } else if (intensity > (start-(1.0*step))) {
+           //       color = vec4((mainColor/1.15), 1.0);
+           //  } else if (intensity > (start-(2.0*step))) {
+           //      //color = vec4(0.6,0.3,0.3,1.0);
+           //      // color = vec4((mainColor/2.0), 1.0);
+           //      color = vec4((mainColor/1.35), 1.0);
+           //  } else if (intensity > (start-(3.0*step))) {
+           //      //color = vec4(0.4,0.2,0.2,1.0);
+           //      color = vec4((mainColor/1.7), 1.0);
+           //  // } else if (intensity > (start-(4.0*step))) {
+           //  //     color = vec4((mainColor2/2.8), 1.0);
+           //  } else {
+           //      //color = vec4(0.2,0.1,0.1,1.0);
+           //      //color = vec4(0.2,0.1,0.1,1.0);
+           //      color = vec4(0,0,0, 1.0);
+           //  }
+
+
         // varying vec3 vNormal;
         // void main()
         // {
         //     vec3 LightPosition = vec3(10.0, 10.0, 20.0);
-        //
         //     vec4 color1 = frontMaterial.diffuse;
         //     vec4 color2;
-        //
         //     float intensity = dot(normalize(LightPosition),Normal);
         //
         //     if (intensity > 0.95)      color2 = vec4(1.0, 1.0, 1.0, 1.0);
@@ -893,14 +956,14 @@ function toonFragmentShader() {
         //
         //     gl_FragColor = color1 * color2;
         // }
-        
+
         // uniform float fraction;
         //
         // varying vec4 vertColor;
         // varying vec3 vertNormal;
         // varying vec3 vertLightDir;
         //
-        // void main() {  
+        // void main() {
         //   float intensity;
         //   vec4 color;
         //   intensity = max(0.0, dot(vertLightDir, vertNormal));
@@ -914,11 +977,9 @@ function toonFragmentShader() {
         //   } else {
         //     color = vec4(vec3(0.2), 1.0);
         //   }
-        //
-        //   gl_FragColor = color * vertColor;  
+        //   gl_FragColor = color * vertColor;
         // }
-    `
-}
+ */
 
 // --------------------------------------------------
 // Some Shader
