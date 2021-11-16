@@ -54,6 +54,9 @@ let materialsArray = [];
 let teapotGeometry;
 let shading = 0;
 
+// lambert stuff
+let lambertColor = new THREE.Color(0x000000);;
+
 // toonShader stuff
 let toonColor = 0;
 let toonNumLayers = 0;
@@ -232,10 +235,10 @@ function addPhongTeapot() {
                 LightPosition: {value: phongLightPosition},
                 Shininess: {value: phongShininess}
             },
-        vertexShader: phongVertexShader(),
-        fragmentShader: phongFragmentShader(),
-        // fragmentShader: toonFragmentShader(),
-        // vertexShader: toonVertexShader(),
+        // vertexShader: phongVertexShader(),
+        // fragmentShader: phongFragmentShader(),
+        fragmentShader: lambertFragmentShader(),
+        vertexShader: lambertVertexShader(),
     });
 
     teapotB = new THREE.Mesh(teapotGeometry2, itemMaterial);
@@ -330,6 +333,37 @@ function addToonShadingSphere() {
     });
 
     let geometry = new THREE.SphereGeometry(1 * scale, 32, 16)
+    let mesh = new THREE.Mesh(geometry, material);
+
+    mesh.position.z = -6 * scale;
+    scene.add(mesh)
+    sceneObjects.push(mesh)
+}
+
+function addLambertShadingSphere() {
+    // get from header - just another method.
+    // let vShader = document.getElementById('cubeVertexShader').innerHTML;
+    // let fShader = document.getElementById('cubeFragmentShader').innerHTML;
+
+    uniforms.lambertColor = {type: 'vec3', value: lambertColor}
+    // uniforms.colorB = {type: 'vec3', value: new THREE.Color(0xACB6E5)}
+    uniforms = THREE.UniformsUtils.merge([
+        uniforms,
+        THREE.UniformsLib['lights']
+    ])
+
+    let material = new THREE.ShaderMaterial({
+        //Optional, here you can supply uniforms and attributes
+        uniforms: uniforms,
+        vertexShader: lambertVertexShader(),
+        fragmentShader: lambertFragmentShader(),
+        lights: true
+
+    });
+
+    // let geometry = new THREE.SphereGeometry(1 * scale, 32, 16)
+    let geometry = new THREE.BoxGeometry(1 * scale, 1 * scale, 1 * scale)
+
     let mesh = new THREE.Mesh(geometry, material);
 
     mesh.position.z = 3 * scale;
@@ -499,6 +533,8 @@ function init() {
 
     addToonShadingSphere();
 
+    addLambertShadingSphere();
+
     controls = [];
     controls.push(new Controller(teapotA, 0));
     addControls(controls[0]);
@@ -641,7 +677,7 @@ function lambertVertexShader() {
   `
 }
 
-function lambertLightFragmentShader() {
+function lambertFragmentShader() {
     return `
       struct PointLight {
         vec3 color;
@@ -650,7 +686,7 @@ function lambertLightFragmentShader() {
       };  
 
       uniform vec3 colorA; 
-      uniform vec3 colorB; 
+      uniform vec3 lambertColor; 
       uniform PointLight pointLights[NUM_POINT_LIGHTS];
       varying vec3 vUv;
       varying vec4 modelViewPosition; 
@@ -668,15 +704,11 @@ function lambertLightFragmentShader() {
                * 1.0; //'light intensity' 
         }
 
-        //TODO get ambient light from THREE.js 
-        //logic at this point is: always add a constant float since ambient light is evenly distributed in the scene
-        //Not lambert direction is defintely not the same as the lambert material from three
-
         vec3 redAndPoint = vec3(1.0 * addedLights.r, 1.0 * addedLights.g, 1.0 * addedLights.b);
-        vec3 finalWhite = vec3(redAndPoint.r + 0.3, redAndPoint.r + 0.3, redAndPoint.r + 0.3); 
+        vec3 finalWhite = vec3(redAndPoint.r + lambertColor.r, redAndPoint.g + lambertColor.g, redAndPoint.b + lambertColor.b); 
 
-        //vec3 colorAndPointLight = mix(colorB, colorB, vUv.z) * addedLights.rgb;
-        //vec3 finalColor = vec3(colorAndPointLight.r + 0.3, colorAndPointLight.g + 0.3, colorAndPointLight.b + 0.3);
+        vec3 colorAndPointLight = lambertColor;
+        vec3 finalColor = vec3(colorAndPointLight.r, colorAndPointLight.g, colorAndPointLight.b);
 
         gl_FragColor = vec4(finalWhite, 1.0);
       }
@@ -808,6 +840,7 @@ function glowFragmentShader() {
 
 // --------------------------------------------------
 // Toon Shader
+// Source: https://www.lighthouse3d.com/tutorials/glsl-12-tutorial/toon-shader-version-ii/
 // --------------------------------------------------
 function toonVertexShader() {
     return `
@@ -889,112 +922,35 @@ function toonFragmentShader() {
     `
 }
 
-/* OLD Vertex Shader
-        // varying vec3 	vNormal;
-		// uniform vec3 	uLightDirection;
-		// varying vec2 	vUv;
-		// void main() {
-		//     // normalize the normals
-  		// 	vNormal = normalize(normalMatrix * normal);
-    	// 	//Get UV coordinates
-  		// 	vUv = uv;
-  		// 	gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );
-		// }
-
-        // uniform mat4 transform;
-        // uniform vec3 lightNormal;
-        // attribute vec4 vertex;
-        // attribute vec4 color;
-        // varying vec4 vertColor;
-        // varying vec3 vertNormal;
-        // varying vec3 vertLightDir;
-        //
-        // void main() {
-        //   gl_Position = transform * vertex;
-        //   vertColor = color;
-        //   vertNormal = normalize(normalMatrix * normal);
-        //   vertLightDir = -lightNormal;
-        // }
- */
-
-/* OLD Fragment Shader
-
-           // if (intensity > (start-(0.0*step))) {  // 1.0-0.8
-           //      //color = vec4(1.0,0.5,0.5,1.0);
-           //       color = vec4((mainColor/1.0), 1.0);
-           //  } else if (intensity > (start-(1.0*step))) {
-           //       color = vec4((mainColor/1.15), 1.0);
-           //  } else if (intensity > (start-(2.0*step))) {
-           //      //color = vec4(0.6,0.3,0.3,1.0);
-           //      // color = vec4((mainColor/2.0), 1.0);
-           //      color = vec4((mainColor/1.35), 1.0);
-           //  } else if (intensity > (start-(3.0*step))) {
-           //      //color = vec4(0.4,0.2,0.2,1.0);
-           //      color = vec4((mainColor/1.7), 1.0);
-           //  // } else if (intensity > (start-(4.0*step))) {
-           //  //     color = vec4((mainColor2/2.8), 1.0);
-           //  } else {
-           //      //color = vec4(0.2,0.1,0.1,1.0);
-           //      //color = vec4(0.2,0.1,0.1,1.0);
-           //      color = vec4(0,0,0, 1.0);
-           //  }
-
-
-        // varying vec3 vNormal;
-        // void main()
-        // {
-        //     vec3 LightPosition = vec3(10.0, 10.0, 20.0);
-        //     vec4 color1 = frontMaterial.diffuse;
-        //     vec4 color2;
-        //     float intensity = dot(normalize(LightPosition),Normal);
-        //
-        //     if (intensity > 0.95)      color2 = vec4(1.0, 1.0, 1.0, 1.0);
-        //     else if (intensity > 0.75) color2 = vec4(0.8, 0.8, 0.8, 1.0);
-        //     else if (intensity > 0.50) color2 = vec4(0.6, 0.6, 0.6, 1.0);
-        //     else if (intensity > 0.25) color2 = vec4(0.4, 0.4, 0.4, 1.0);
-        //     else                       color2 = vec4(0.2, 0.2, 0.2, 1.0);
-        //
-        //     gl_FragColor = color1 * color2;
-        // }
-
-        // uniform float fraction;
-        //
-        // varying vec4 vertColor;
-        // varying vec3 vertNormal;
-        // varying vec3 vertLightDir;
-        //
-        // void main() {
-        //   float intensity;
-        //   vec4 color;
-        //   intensity = max(0.0, dot(vertLightDir, vertNormal));
-        //
-        //   if (intensity > pow(0.95, fraction)) {
-        //     color = vec4(vec3(1.0), 1.0);
-        //   } else if (intensity > pow(0.5, fraction)) {
-        //     color = vec4(vec3(0.6), 1.0);
-        //   } else if (intensity > pow(0.25, fraction)) {
-        //     color = vec4(vec3(0.4), 1.0);
-        //   } else {
-        //     color = vec4(vec3(0.2), 1.0);
-        //   }
-        //   gl_FragColor = color * vertColor;
-        // }
- */
-
 // --------------------------------------------------
 // Some Shader
 // --------------------------------------------------
-function someVertexShader() {
-    return `
-    
-    `
-}
-
-function someFragmentShader() {
-    return `
-    
-    `
-}
+// function flatVertexShader() {
+//     return `
+//         flat out vec4 polygon_color;
+//
+//        
+//         void main() {
+//             vec3 ambient = vec3(0.9,0.3,0.9);
+//             vec3 diffuse = vec3(0.9,0.5,0.3);
+//             vec3 specular = vec3(0.8,0.8,0.8);
+//        
+//             polygon_color = vec4(normalize(ambient + diffuse + specular), 1.0);
+//             gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );
+//         }
+//     `
+// }
+//
+// function flatFragmentShader() {
+//     return `
+//         flat in vec4 polygon_color;
+//    
+//         void main() {
+// 			// lerp between the glowColor and matColor based on the normal's z value
+//   			gl_FragColor = polygon_color;
+// 		}
+//     `
+// }
 
 
 init();
