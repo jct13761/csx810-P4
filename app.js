@@ -361,8 +361,8 @@ function addLambertShadingSphere() {
 
     });
 
-    // let geometry = new THREE.SphereGeometry(1 * scale, 32, 16)
-    let geometry = new THREE.BoxGeometry(1 * scale, 1 * scale, 1 * scale)
+    let geometry = new THREE.SphereGeometry(1 * scale, 32, 16)
+    // let geometry = new THREE.BoxGeometry(1 * scale, 1 * scale, 1 * scale)
 
     let mesh = new THREE.Mesh(geometry, material);
 
