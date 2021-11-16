@@ -55,7 +55,7 @@ let teapotGeometry;
 let shading = 0;
 
 // lambert stuff
-let lambertColor = new THREE.Color(0x000000);;
+let lambertColor = new THREE.Color(0x0000ff);;
 
 // toonShader stuff
 let toonColor = 0;
@@ -693,23 +693,18 @@ function lambertFragmentShader() {
       varying vec3 vecNormal; 
 
       void main() {
-        // looping through all the point light and than apply magic
         //https://csantosbh.wordpress.com/2014/01/09/custom-shaders-with-three-js-uniforms-textures-and-lighting/
         
         vec4 addedLights = vec4(0.0, 0.0, 0.0, 1.0);
 
         for(int l = 0; l < NUM_POINT_LIGHTS; l++) {
             vec3 lightDirection = normalize(modelViewPosition.xyz + pointLights[l].position);
-            addedLights.rgb += clamp(dot(-lightDirection, vecNormal), 0.0, 1.0) * pointLights[l].color
-               * 1.0; //'light intensity' 
+            addedLights.rgb += clamp(dot(-lightDirection, vecNormal), 0.0, 1.0) * pointLights[l].color * 1.0; //'light intensity' 
         }
 
         vec3 redAndPoint = vec3(1.0 * addedLights.r, 1.0 * addedLights.g, 1.0 * addedLights.b);
         vec3 finalWhite = vec3(redAndPoint.r + lambertColor.r, redAndPoint.g + lambertColor.g, redAndPoint.b + lambertColor.b); 
-
-        vec3 colorAndPointLight = lambertColor;
-        vec3 finalColor = vec3(colorAndPointLight.r, colorAndPointLight.g, colorAndPointLight.b);
-
+        
         gl_FragColor = vec4(finalWhite, 1.0);
       }
   `
