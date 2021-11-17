@@ -58,24 +58,28 @@ let shading = 0;
 let lambertColor = new THREE.Color(0x0000ff);;
 
 // toonShader stuff
-let toonColor = 0;
-let toonNumLayers = 0;
+let toonColorHex = 0x660033;
+let toonColor = new THREE.Color(toonColorHex);
+let toonNumLayers = 5;
 let toonStartingBound = 0.8;
 let toonColorIntensityPerStep = 0.15;
 
 // Phong Shader stuff
+let phongIsAmbientEnabled = true;
 let phongAmbientX = 0.9;
 let phongAmbientY = 0.3;
 let phongAmbientZ = 0.9;
-// let phongAmbient = new THREE.Vector3(phongAmbientX, phongAmbientY, phongAmbientZ);
+let phongAmbient = new THREE.Vector3(phongAmbientX, phongAmbientY, phongAmbientZ);
+let phongIsDiffuseEnabled = true;
 let phongDiffuseX = 0.9;
 let phongDiffuseY = 0.5;
 let phongDiffuseZ = 0.3;
-// let phongDiffuse = new THREE.Vector3(phongDiffuseX, phongDiffuseY, phongDiffuseZ);
+let phongDiffuse = new THREE.Vector3(phongDiffuseX, phongDiffuseY, phongDiffuseZ);
+let phongIsSpecularEnabled = true;
 let phongSpecularX = 0.8;
 let phongSpecularY = 0.8;
 let phongSpecularZ = 0.8;
-// let phongSpecular = new THREE.Vector3(phongSpecularX, phongSpecularY, phongSpecularZ);
+let phongSpecular = new THREE.Vector3(phongSpecularX, phongSpecularY, phongSpecularZ);
 let phongLightIntensity = new THREE.Vector4(0.5, 0.5, 0.5, 1.0);
 let phongLightPosition = new THREE.Vector4(0.0, 2000.0, 0.0, 1.0);
 let phongShininess = 200.0;
@@ -127,7 +131,35 @@ function addControls(controlObject) {
     gui.add(controlObject, 'Shader', shadingAlgorithm[0]).onChange(setSomeVariables);
     // gui.add(controlObject, 'shear_a', -5, 5).step(0.1);
 
+    let toonControls = gui.addFolder('Toon Controls');
+    toonControls.addColor(controlObject, 'toonColorHex').name('Color').onChange( function(color) {
+        console.log("Color change = " + color);
+        toonColor = new THREE.Color(color);
+    });
+    toonControls.add(controlObject, 'toonNumLayers', 1, 20).name('Layers').step(1);
+    toonControls.add(controlObject, 'toonStartingBound', 0.1, 2.0).name('Starting Bound').step(0.1);
+    toonControls.add(controlObject, 'toonColorIntensityPerStep', 0.01, 2.0).name('Step Intensity').step(0.01);
+
+    let phongControls = gui.addFolder('Phong Controls');
+    let phongAmbientFolder = phongControls.addFolder('Ambient');
+    phongAmbientFolder.add(controlObject, 'phongIsAmbientEnabled').name('Enable Ambient');
+    phongAmbientFolder.add(controlObject, 'phongAmbientX', 0, 1).name('Ambient X').step(0.05);
+    phongAmbientFolder.add(controlObject, 'phongAmbientY', 0, 1).name('Ambient Y').step(0.05);
+    phongAmbientFolder.add(controlObject, 'phongAmbientZ', 0, 1).name('Ambient Z').step(0.05);
+    let phongDiffuseFolder = phongControls.addFolder('Diffuse');
+    phongDiffuseFolder.add(controlObject, 'phongIsDiffuseEnabled').name('Enable Diffuse');
+    phongDiffuseFolder.add(controlObject, 'phongDiffuseX', 0, 1).name('Diffuse X').step(0.05);
+    phongDiffuseFolder.add(controlObject, 'phongDiffuseY', 0, 1).name('Diffuse Y').step(0.05);
+    phongDiffuseFolder.add(controlObject, 'phongDiffuseZ', 0, 1).name('Diffuse Z').step(0.05);
+    let phongSpecularFolder = phongControls.addFolder('Specular');
+    phongSpecularFolder.add(controlObject, 'phongIsSpecularEnabled').name('Enable Specular');
+    phongSpecularFolder.add(controlObject, 'phongSpecularX', 0, 1).name('Specular X').step(0.05);
+    phongSpecularFolder.add(controlObject, 'phongSpecularY', 0, 1).name('Specular Y').step(0.05);
+    phongSpecularFolder.add(controlObject, 'phongSpecularZ', 0, 1).name('Specular Z').step(0.05);
+
+    // ADD THE LAST 3 VARIABLES FOR PHONG SHADING
 }
+
 
 
 // using the code as a string from  app.html --
@@ -220,14 +252,13 @@ function addPhongTeapot() {
 
     const teapotGeometry2 = new TeapotBufferGeometry(teapotSize, tess, true, true, true, true);
 
-
     let itemMaterial = new THREE.ShaderMaterial({
         //Optional, here you can supply uniforms and attributes
         uniforms:
             {
-                Ka: {value: new THREE.Vector3(phongAmbientX, phongAmbientY, phongAmbientZ)}, // the color
-                Kd: {value: new THREE.Vector3(phongDiffuseX, phongDiffuseY, phongDiffuseZ)},
-                Ks: {value: new THREE.Vector3(phongSpecularX, phongSpecularY, phongSpecularZ)},
+                Ka: {value: phongAmbient}, // the color
+                Kd: {value: phongDiffuse},
+                Ks: {value: phongSpecular},
                 // Ka: {value: phongAmbient}, // the color
                 // Kd: {value: phongDiffuse},
                 // Ks: {value: phongSpecular},
@@ -235,10 +266,10 @@ function addPhongTeapot() {
                 LightPosition: {value: phongLightPosition},
                 Shininess: {value: phongShininess}
             },
-        // vertexShader: phongVertexShader(),
-        // fragmentShader: phongFragmentShader(),
-        fragmentShader: lambertFragmentShader(),
-        vertexShader: lambertVertexShader(),
+        vertexShader: phongVertexShader(),
+        fragmentShader: phongFragmentShader(),
+        // fragmentShader: lambertFragmentShader(),
+        // vertexShader: lambertVertexShader(),
     });
 
     teapotB = new THREE.Mesh(teapotGeometry2, itemMaterial);
@@ -290,8 +321,9 @@ function addNormalShadingSphere() {
 
 function addGlowShadingSphere() {
     uniforms.glowColor = {type: 'vec3', value: new THREE.Vector3(0.8, 0.4, 0.1)}
-    // uniforms.glowColor = {type: 'vec3', value: new THREE.Vector3(1.0, 0.68, 0)}
+    // uniforms.glowColor = {type: 'vec3', value: new THREE.Vector3(0, 0, 1)}
     uniforms.matColor = {type: 'vec3', value: new THREE.Vector3(0.0, 0.0, 0.0)}
+    // uniforms.matColor = {type: 'vec3', value: new THREE.Vector3(1.0, 1.0, 1.0)}
 
 
     let material = new THREE.ShaderMaterial({
@@ -302,6 +334,8 @@ function addGlowShadingSphere() {
     });
 
     let geometry = new THREE.SphereGeometry(1 * scale, 32, 16)
+    // let geometry = new THREE.BoxGeometry(1 * scale, 1 * scale, 1 * scale)
+
     let mesh = new THREE.Mesh(geometry, material);
 
     mesh.position.z = -3 * scale;
@@ -314,10 +348,7 @@ function addToonShadingSphere() {
     // let vShader = document.getElementById('cubeVertexShader').innerHTML;
     // let fShader = document.getElementById('cubeFragmentShader').innerHTML;
 
-    toonColor = new THREE.Color(0x660033);
-    toonNumLayers = 5;
-    toonStartingBound = 0.8;
-    toonColorIntensityPerStep = 0.15;
+
 
     uniforms.mainColor = {type: 'vec3', value: toonColor};
     uniforms.numLayers = {type: 'int', value: toonNumLayers};
@@ -333,6 +364,8 @@ function addToonShadingSphere() {
     });
 
     let geometry = new THREE.SphereGeometry(1 * scale, 32, 16)
+    // let geometry = new THREE.BoxGeometry(1 * scale, 1 * scale, 1 * scale)
+
     let mesh = new THREE.Mesh(geometry, material);
 
     mesh.position.z = -6 * scale;
@@ -496,6 +529,38 @@ class Controller {
         this.Shader = shading;
         this.theta = 0.1;
         this.parameters = {a: false,}
+
+        // shader variables
+        // lambert
+        this.lambertColor = lambertColor;
+        // toon
+        // this.toonColor = toonColor;
+        this.toonColorHex = toonColorHex;
+        this.toonNumLayers = toonNumLayers;
+        this.toonStartingBound = toonStartingBound;
+        this.toonColorIntensityPerStep = toonColorIntensityPerStep;
+        // phong
+        this.phongIsAmbientEnabled = phongIsAmbientEnabled;
+        this.phongAmbientX = phongAmbientX;
+        this.phongAmbientY = phongAmbientY;
+        this.phongAmbientZ = phongAmbientZ;
+        this.phongAmbient = phongAmbient;
+
+        this.phongIsDiffuseEnabled = phongIsDiffuseEnabled;
+        this.phongDiffuseX = phongDiffuseX;
+        this.phongDiffuseY = phongDiffuseY;
+        this.phongDiffuseZ = phongDiffuseZ;
+        this.phongDiffuse = phongDiffuse;
+
+        this.phongIsSpecularEnabled = phongIsSpecularEnabled
+        this.phongSpecularX = phongSpecularX;
+        this.phongSpecularY = phongSpecularY;
+        this.phongSpecularZ = phongSpecularZ;
+        this.phongSpecular = phongSpecular;
+
+        this.phongLightIntensity = phongLightIntensity;
+        this.phongLightPosition = phongLightPosition;
+        this.phongShininess = phongShininess;
     }
 }
 
