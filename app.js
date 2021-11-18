@@ -437,7 +437,11 @@ function createThreejsShaders() {
 }
 
 function setLibraryToonShader() {
-    return new THREE.MeshToonMaterial({color: toonColor});
+    let fiveTone = new THREE.TextureLoader().load('textures/fiveTone.jpg');
+    fiveTone.minFilter = THREE.NearestFilter;
+    fiveTone.magFilter = THREE.NearestFilter;
+    let toon = new THREE.MeshToonMaterial({color: toonColor, gradientMap: fiveTone});
+    return toon;
 }
 function setLibraryPhongShader() {
     return new THREE.MeshPhongMaterial({color: phongAmbient, side: THREE.DoubleSide});
