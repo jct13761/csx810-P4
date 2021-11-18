@@ -92,10 +92,10 @@ let phongIsAmbientEnabled = true;
 let phongAmbientHex = 0xE61AE6;
 let phongAmbient = new THREE.Color(phongAmbientHex);
 let phongIsDiffuseEnabled = true;
-let phongDiffuseHex = 0xE6804D;
+let phongDiffuseHex = 0xcccccc;
 let phongDiffuse = new THREE.Color(phongDiffuseHex);
 let phongIsSpecularEnabled = true;
-let phongSpecularHex = 0xcccccc;
+let phongSpecularHex = 0xffffff;
 let phongSpecular = new THREE.Color(phongSpecularHex);
 let phongLightIntensity = new THREE.Vector4(0.5, 0.5, 0.5, 1.0);
 let phongLightPosition = new THREE.Vector4(0.0, 2000.0, 0.0, 1.0);
@@ -909,6 +909,9 @@ class Controller {
 
             objArray[i].geometry.applyMatrix4(matrix);
             objArray[i].geometry.verticesNeedUpdate = true;
+
+            threejsObjArray[i].geometry.applyMatrix4(matrix);
+            threejsObjArray[i].geometry.verticesNeedUpdate = true;
         } // for
     } // doScale
 }
