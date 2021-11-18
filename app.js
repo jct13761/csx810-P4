@@ -69,7 +69,7 @@ let materialsArray = [];
 let shading = 0;
 
 // lambert stuff
-let lambertColorHex = 0x0000ff;
+let lambertColorHex = 0x000000;
 let lambertColor = new THREE.Color(lambertColorHex);
 
 // glow stuff
@@ -181,7 +181,7 @@ function addControls(controlObject) {
         toonColor = new THREE.Color(toonColorHex);
         updateToonShader();
     });
-    toonControls.add(controlObject, 'toonNumLayers', 1, 20).name('Layers').step(1).onChange(function (layers) {
+    toonControls.add(controlObject, 'toonNumLayers', 2, 20).name('Layers').step(1).onChange(function (layers) {
         toonNumLayers = layers;
         updateToonShader();
     });
