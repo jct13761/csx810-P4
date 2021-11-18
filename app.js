@@ -66,7 +66,7 @@ let torusKnotGeo;
 
 
 let materialsArray = [];
-let shading = 5;
+let shading = 0;
 
 // lambert stuff
 let lambertColorHex = 0x0000ff;
@@ -158,7 +158,7 @@ let customShadingAlgorithmString = [
 function addControls(controlObject) {
     gui = new GUI();
     gui.add(controlObject, 'rotationSpeed', -0.01, 0.01).step(0.001);
-    gui.add(controlObject, 'doScale');
+    gui.add(controlObject, 'doScale').name('Apply Scale');
     gui.add(controlObject, 'scale', 0, 2).step(0.1).onChange(updateScale);
 
     gui.add(controlObject, 'Shader', customShadingAlgorithm[0]).onChange(updateShaderType);
@@ -1054,6 +1054,7 @@ function diffuseFragmentShaderTexture() {
 
 // --------------------------------------------------
 // Lambert Shader
+// Source: https://dev.to/maniflames/creating-a-custom-shader-in-threejs-3bhi
 // --------------------------------------------------
 function lambertVertexShader() {
     return `
