@@ -56,6 +56,7 @@ let mainCylinder;
 let mainTorus;
 let mainTorusKnot;
 let objArray = [];
+let threejsObjArray = [];
 
 let teapotGeo;
 let cubeGeo;
@@ -66,6 +67,7 @@ let torusKnotGeo;
 
 
 let materialsArray = [];
+let threejsMaterialsArray = [];
 let shading = 0;
 
 // lambert stuff
@@ -105,31 +107,31 @@ let experimentalColorA = new THREE.Color(experimentalColorAHex);
 let experimentalColorBHex = 0xACB6E5;
 let experimentalColorB = new THREE.Color(experimentalColorBHex);
 
-let shadingAlgorithm = [
-    {
-        WireFrame: 0,  /**/
-        Flat: 1,
-        Normal: 2,      /* OK */
-        Glow: 3,      /* OK */
-        Toon: 4,      /* OK */
-        Phong: 5,
-        Lambert: 6,
-        Gourard: 7,
-        Texture: 8,
-
-    },
-];
-let shadingAlgorithmString = [
-    'WireFrame',
-    'Flat',
-    'Normal',
-    'Glow',
-    'Toon',
-    'Phong',
-    'Lambert',
-    'Gourard',
-    'Texture',
-];
+// let shadingAlgorithm = [
+//     {
+//         WireFrame: 0,  /**/
+//         Flat: 1,
+//         Normal: 2,      /* OK */
+//         Glow: 3,      /* OK */
+//         Toon: 4,      /* OK */
+//         Phong: 5,
+//         Lambert: 6,
+//         Gourard: 7,
+//         Texture: 8,
+//
+//     },
+// ];
+// let shadingAlgorithmString = [
+//     'WireFrame',
+//     'Flat',
+//     'Normal',
+//     'Glow',
+//     'Toon',
+//     'Phong',
+//     'Lambert',
+//     'Gourard',
+//     'Texture',
+// ];
 
 let customShadingAlgorithm = [
     {
@@ -240,39 +242,6 @@ function addControls(controlObject) {
     // });
     // let phongDiffuseFolder = phongControls.addFolder('Diffuse');
 
-    // phongDiffuseFolder.add(controlObject, 'phongDiffuseX', 0, 1).name('Diffuse X').step(0.05).onChange(function (value) {
-    //     phongDiffuseX = value;
-    //     phongDiffuse.x = phongDiffuseX;
-    //     updatePhongShader();
-    // });
-    // phongDiffuseFolder.add(controlObject, 'phongDiffuseY', 0, 1).name('Diffuse Y').step(0.05).onChange(function (value) {
-    //     phongDiffuseY = value;
-    //     phongDiffuse.y = phongDiffuseY;
-    //     updatePhongShader();
-    // });
-    // phongDiffuseFolder.add(controlObject, 'phongDiffuseZ', 0, 1).name('Diffuse Z').step(0.05).onChange(function (value) {
-    //     phongDiffuseZ = value;
-    //     phongDiffuse.z = phongDiffuseZ;
-    //     updatePhongShader();
-    // });
-    // let phongSpecularFolder = phongControls.addFolder('Specular');
-
-    // phongSpecularFolder.add(controlObject, 'phongSpecularX', 0, 1).name('Specular X').step(0.05).onChange(function (value) {
-    //     phongSpecularX = value;
-    //     phongSpecular.x = phongSpecularX;
-    //     updatePhongShader();
-    // });
-    // phongSpecularFolder.add(controlObject, 'phongSpecularY', 0, 1).name('Specular Y').step(0.05).onChange(function (value) {
-    //     phongSpecularY = value;
-    //     phongSpecular.y = phongSpecularY;
-    //     updatePhongShader();
-    // });
-    // phongSpecularFolder.add(controlObject, 'phongSpecularZ', 0, 1).name('Specular Z').step(0.05).onChange(function (value) {
-    //     phongSpecularZ = value;
-    //     phongSpecular.z = phongSpecularZ;
-    //     updatePhongShader();
-    // });
-
     // ADD THE LAST 3 VARIABLES FOR PHONG SHADING
 
 
@@ -303,6 +272,8 @@ function updateShaderType(value) {
     for (let i = 0; i < objArray.length; i++) {
         objArray[i].material = materialsArray[value];
         objArray[i].material.needsUpdate = true;
+        threejsObjArray[i].material = threejsMaterialsArray[value];
+        threejsObjArray[i].material.needsUpdate = true;
     } // for
 }
 
@@ -324,7 +295,9 @@ function updateLambertShader() {
     let lamPos = 6;
 
     let newLambertShader = lambertShaderMaterial();
+    // let libraryLambertShader;
     materialsArray.splice(lamPos, 1, newLambertShader);
+    // threejsMaterialsArray.splice(lamPos, 1, libraryLambertShader);
     if (shading == lamPos)
         updateShaderType(shading);
 }
@@ -332,7 +305,9 @@ function updateLambertShader() {
 function updateToonShader() {
     let toonPos = 4;
     let newToonShader = toonShaderMaterial();
+    let libToonShader = setLibraryToonShader();
     materialsArray.splice(toonPos, 1, newToonShader);
+    threejsMaterialsArray.splice(toonPos, 1, libToonShader);
 
     if (shading == toonPos)
         updateShaderType(shading);
@@ -341,7 +316,9 @@ function updateToonShader() {
 function updatePhongShader() {
     let phongPos = 5;
     let newPhongShader = phongShaderMaterial();
+    let libPhongShader = setLibraryPhongShader();
     materialsArray.splice(phongPos, 1, newPhongShader);
+    threejsMaterialsArray.splice(phongPos, 1, libPhongShader);
 
     if (shading == phongPos)
         updateShaderType(shading);
@@ -350,108 +327,138 @@ function updatePhongShader() {
 function updateExperimentalShader() {
     let expPos = 7;
     let newExperimentalShader = experimentalShaderMaterial();
+    let libExpShader = setLibraryExperimentalShader();
     materialsArray.splice(expPos, 1, newExperimentalShader);
+    threejsMaterialsArray.splice(expPos, 1, libExpShader);
 
     if (shading == expPos)
         updateShaderType(shading);
 }
 
+
+
+
+
 // using the code as a string from  app.html --
 function addBuiltInShadersTeapot()  // comparison teapot using library routines
 {
-    // let teapotSize = 1 * scale;
-    // let tess = -1;	// force initialization
-    //
-    // let materialColor = new THREE.Color();
+    createGeometries();
+
+    createThreejsShaders();
+
+    //console.log("inShader:" + shadingAlgorithmString[shading]);
+
+
+
+    // Create Meshes
+    mainTeapot = new THREE.Mesh(teapotGeo, threejsMaterialsArray[shading]);
+    mainCube = new THREE.Mesh(cubeGeo, threejsMaterialsArray[shading]);
+    mainSphere = new THREE.Mesh(sphereGeo, threejsMaterialsArray[shading]);
+    mainCylinder = new THREE.Mesh(cylinderGeo, threejsMaterialsArray[shading]);
+    mainTorus = new THREE.Mesh(torusGeo, threejsMaterialsArray[shading]);
+    mainTorusKnot = new THREE.Mesh(torusKnotGeo, threejsMaterialsArray[shading]);
+
+    // add meshes to array
+    threejsObjArray.push(mainTeapot);
+    threejsObjArray.push(mainCube);
+    threejsObjArray.push(mainSphere);
+    threejsObjArray.push(mainCylinder);
+    threejsObjArray.push(mainTorus);
+    threejsObjArray.push(mainTorusKnot);
+
+
+    for (let i = 0; i < threejsObjArray.length; i++ ) {
+        scene.add(threejsObjArray[i]);
+        threejsObjArray[i].position.z = -8;
+    }
+
+    // set obj positions
+    mainTeapot.position.x = 0 * scale;
+    mainCube.position.x = -3 * scale;
+    mainSphere.position.x = -5 * scale;
+    mainCylinder.position.x = -7 * scale;
+    mainTorus.position.x = 4 * scale;
+    mainTorusKnot.position.x = 8 * scale;
+
+}
+
+function createThreejsShaders() {
+    let materialColor = new THREE.Color(0xffffff);
     // materialColor.setRGB(1.0, 0.8, 0.6);
-    //
-    // // TEXTURE MAP
+
+    // TEXTURE MAP
     // textureMap = new THREE.TextureLoader().load('textures/uv_grid_opengl.jpg');
-    // textureMap.wrapS = textureMap.wrapT = THREE.RepeatWrapping;
-    // textureMap.anisotropy = 16;
-    // textureMap.encoding = THREE.sRGBEncoding;
-    //
-    // // REFLECTION MAP
-    // let path = "textures/cube/pisa/";
-    // let urls = [
-    //     path + "px.png", path + "nx.png",
-    //     path + "py.png", path + "ny.png",
-    //     path + "pz.png", path + "nz.png"
-    // ];
-    //
-    // let textureCube = new THREE.CubeTextureLoader().load(urls);
-    // textureCube.encoding = THREE.sRGBEncoding;
-    //
-    // teapotGeo = new TeapotBufferGeometry(
-    //     teapotSize,
-    //     tess,
-    //     true,
-    //     true,
-    //     true,
-    //     true
-    // );
-    //
-    //
-    // let wireMaterial = new THREE.MeshBasicMaterial({color: 0x7777ff, wireframe: true});
-    // wireMaterial.needsUpdate = true;
-    // materialsArray.push(wireMaterial);
-    //
+    textureMap = new THREE.TextureLoader().load('textures/Grass.jpeg');
+    textureMap.wrapS = textureMap.wrapT = THREE.RepeatWrapping;
+    textureMap.anisotropy = 16;
+    textureMap.encoding = THREE.sRGBEncoding;
+
+    // REFLECTION MAP
+    let path = "textures/cube/pisa/";
+    let urls = [
+        path + "px.png", path + "nx.png",
+        path + "py.png", path + "ny.png",
+        path + "pz.png", path + "nz.png"
+    ];
+
+    let textureCube = new THREE.CubeTextureLoader().load(urls);
+    textureCube.encoding = THREE.sRGBEncoding;
+
+
+    // Gourard
+    threejsMaterialsArray.push(new THREE.MeshLambertMaterial({color: materialColor, side: THREE.DoubleSide}));
+    // Texture
+    threejsMaterialsArray.push(new THREE.MeshPhongMaterial({color: materialColor, map: textureMap, side: THREE.DoubleSide}));
+    // normal
+    threejsMaterialsArray.push(new THREE.MeshNormalMaterial({color: materialColor}));
+    // glow
+    threejsMaterialsArray.push( new THREE.MeshPhongMaterial({color: materialColor, envMap: textureCube, side: THREE.DoubleSide}));
+    // toon
+    let toon = setLibraryToonShader();
+    threejsMaterialsArray.push(toon);
+    // phong
+    let phong = setLibraryPhongShader();
+    threejsMaterialsArray.push(phong);
+    // Diffuse/Lambert
+    let lam = setLibraryLambertShader();
+    threejsMaterialsArray.push(new THREE.MeshLambertMaterial({color: materialColor, side: THREE.DoubleSide}));
+
+    // wireframe (Experimental)
+    let wire = setLibraryExperimentalShader();
+    threejsMaterialsArray.push(wire);
+
     // let flatMaterial = new THREE.MeshPhongMaterial({
     //     color: materialColor,
     //     specular: 0x000000,
     //     flatShading: true,
     //     side: THREE.DoubleSide
     // });
-    // materialsArray.push(flatMaterial);
-    //
-    // let normalMaterial = new THREE.MeshNormalMaterial({color: 0x7777ff});
-    // materialsArray.push(normalMaterial);
-    //
-    // let glowMaterial = new THREE.MeshPhongMaterial({color: materialColor, envMap: textureCube, side: THREE.DoubleSide});
-    // materialsArray.push(glowMaterial);
-    //
-    // //let toonMaterial       = new THREE.MeshToonMaterial( { color: 0x7777ff  } );
-    // let toonMaterial = new THREE.MeshToonMaterial({color: 0x7777ff});
-    // materialsArray.push(toonMaterial);
-    //
-    // let phongMaterial = new THREE.MeshPhongMaterial({color: materialColor, side: THREE.DoubleSide});
-    // materialsArray.push(phongMaterial);
-    //
-    // let lambertMaterial = new THREE.MeshLambertMaterial({color: materialColor, side: THREE.DoubleSide});
-    // materialsArray.push(lambertMaterial);
-    //
-    // let gouraudMaterial = new THREE.MeshLambertMaterial({color: materialColor, side: THREE.DoubleSide});
-    // materialsArray.push(gouraudMaterial);
-    //
-    // let texturedMaterial = new THREE.MeshPhongMaterial({color: materialColor, map: textureMap, side: THREE.DoubleSide});
-    // materialsArray.push(texturedMaterial);
-    //
-    // //console.log("inShader:" + shadingAlgorithmString[shading]);
-    //
-    // // redraw the teapot ----- (not done here )
-    // shading = 2;
-    // mainTeapot = new THREE.Mesh(teapotGeo, materialsArray[shading]);
-    //
-    // scene.add(mainTeapot);
-    // teapotObjects.push(mainTeapot);
-    //
-    // mainTeapot.position.x = 6 * scale;
+    // threejsMaterialsArray.push(flatMaterial);
 }
 
+function setLibraryToonShader() {
+    return new THREE.MeshToonMaterial({color: toonColor});
+}
+function setLibraryPhongShader() {
+    return new THREE.MeshPhongMaterial({color: phongAmbient, side: THREE.DoubleSide});
+}
+function setLibraryLambertShader() {
+    return new THREE.MeshLambertMaterial({color: lambertColor, side: THREE.DoubleSide});
+}
+function setLibraryExperimentalShader() {
+    let wireMaterial = new THREE.MeshBasicMaterial({color: experimentalColorA, wireframe: true});
+    wireMaterial.needsUpdate = true;
+    return wireMaterial;
+}
+
+
 function addCustomShadersShapes() {
-    let teapotSize = 1 * scale;
-    let tess = -1;	// force initialization
 
     // create Materials
     createArrayOfMaterials();
 
     // create Geometries
-    teapotGeo = new TeapotBufferGeometry(teapotSize, tess, true, true, true, true);
-    cubeGeo = new THREE.BoxGeometry(1 * scale, 1 * scale, 1 * scale);
-    sphereGeo = new THREE.SphereGeometry(1 * scale/1.2, 32, 16);
-    cylinderGeo = new THREE.CylinderGeometry( 0, 1*scale/2, 3, 32 );
-    torusGeo = new THREE.TorusGeometry( scale, 1*scale/2.5, 15, 50 );
-    torusKnotGeo = new THREE.TorusKnotGeometry( scale, 1*scale/3, 100, 16 );
+    createGeometries();
 
     // Create Meshes
     mainTeapot = new THREE.Mesh(teapotGeo, materialsArray[shading]);
@@ -485,6 +492,16 @@ function addCustomShadersShapes() {
     mainTorus.position.x = 4 * scale;
     mainTorusKnot.position.x = 8 * scale;
 
+}
+
+function createGeometries() {
+
+    teapotGeo = new TeapotBufferGeometry(1 * scale, -1, true, true, true, true);
+    cubeGeo = new THREE.BoxGeometry(1 * scale, 1 * scale, 1 * scale);
+    sphereGeo = new THREE.SphereGeometry(1 * scale/1.2, 32, 16);
+    cylinderGeo = new THREE.CylinderGeometry( 0, 1*scale/2, 3, 32 );
+    torusGeo = new THREE.TorusGeometry( scale, 1*scale/2.5, 15, 50 );
+    torusKnotGeo = new THREE.TorusKnotGeometry( scale, 1*scale/3, 100, 16 );
 }
 
 function createArrayOfMaterials() {
@@ -790,6 +807,8 @@ function animationLoop(ts) {
     for (let i = 0; i < objArray.length; i++) {
         objArray[i].rotation.x += controls[0].rotationSpeed;
         objArray[i].rotation.y += controls[0].rotationSpeed;
+        threejsObjArray[i].rotation.x += controls[0].rotationSpeed;
+        threejsObjArray[i].rotation.y += controls[0].rotationSpeed;
     }
 
     requestAnimationFrame(animationLoop)
@@ -914,7 +933,7 @@ function init() {
     //
     // addExperimentalShaderCube();      // on right
 
-    // addBuiltInShadersTeapot();          // addTheeJSTeapot : rightmost
+    addBuiltInShadersTeapot();          // addTheeJSTeapot : rightmost
 
     addCustomShadersShapes();
 
