@@ -86,6 +86,7 @@ let toonColor = new THREE.Color(toonColorHex);
 let toonNumLayers = 5;
 let toonStartingBound = 0.8;
 let toonColorIntensityPerStep = 0.15;
+let fiveTone = new THREE.TextureLoader().load('textures/fiveTone.jpg');
 
 // Phong Shader stuff
 let phongIsAmbientEnabled = true;
@@ -267,11 +268,10 @@ function updateLambertShader() {
 // update the toon shader with the new variables and recompile it. This function is called from the GUI controller
 function updateToonShader() {
     let toonPos = 4;
-    let newToonShader = toonShaderMaterial();
     let libToonShader = setLibraryToonShader();
-    materialsArray.splice(toonPos, 1, newToonShader);
     threejsMaterialsArray.splice(toonPos, 1, libToonShader);
-
+    let newToonShader = toonShaderMaterial();
+    materialsArray.splice(toonPos, 1, newToonShader);
     if (shading == toonPos)
         updateShaderType(shading);
 }
@@ -383,10 +383,10 @@ function createThreejsShaders() {
 
 // create the three.js library toon shader and return it
 function setLibraryToonShader() {
-    let fiveTone = new THREE.TextureLoader().load('textures/fiveTone.jpg');
     fiveTone.minFilter = THREE.NearestFilter;
     fiveTone.magFilter = THREE.NearestFilter;
     let toon = new THREE.MeshToonMaterial({color: toonColor, gradientMap: fiveTone});
+    // let toon = new THREE.MeshToonMaterial({color: toonColor, gradientMap: fiveTone});
     return toon;
 }
 
