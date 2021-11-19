@@ -871,7 +871,7 @@ function diffuseVertexShader() {
   			// just as 'position'
 
   			//  normal = normalize(gl_NormalMatrix * gl_Normal);
-  			vNormal = normalize(normalMatrix * normal);
+  			vNormal = normalize(mat3(modelMatrix) * normal);
   			//vNormal = normal;
 
     		//Get UV coordinates
@@ -943,7 +943,8 @@ function lambertVertexShader() {
     void main() {
       vUv = position; 
       vec4 modelViewPosition = modelViewMatrix * vec4(position, 1.0);
-      vecNormal = (modelViewMatrix * vec4(normal, 0.0)).xyz; //????????
+      vec3 Normal = normalize(mat3(modelMatrix) * normal);
+      vecNormal = (modelViewMatrix * vec4(Normal, 0.0)).xyz; //????????
       gl_Position = projectionMatrix * modelViewPosition; 
     }
   `
@@ -991,7 +992,7 @@ function phongVertexShader() {
       		varying vec3 Position;
 
       		void main()	{
-        		Normal = normalize(normalMatrix * normal);
+        		Normal = normalize(mat3(modelMatrix) * normal);
         		Position = vec3(modelViewMatrix * vec4(position, 1.0));
         		gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
       		}
@@ -1133,7 +1134,7 @@ function toonVertexShader() {
         uniform int numLayers;
 
         void main() {
-	        vNormal = normalMatrix * normal;
+	        vNormal = mat3(modelMatrix) * normal;
             // vNormal = normalize(normalMatrix * normal);
             gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );
         }
