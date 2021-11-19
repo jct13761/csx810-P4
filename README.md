@@ -2,12 +2,6 @@
 
 Project 4 for CSCI 4810: Computer Graphics Fall 2021, UGA, Dr. Hybinette
 
-**TODO:**\
-Make Piazza post\
-Piazza reply 1\
-Piazza reply 2\
-
-
 **T1: Fix the Light Direction on Cube**\
 COMPLETED - This was a realitively simple fix once I figured out the issue. I had to normalize the normal vector
 with the normalMatrix in order to make the light not rotate with the cube. Something to note is that the light does
