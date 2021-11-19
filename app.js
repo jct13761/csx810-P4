@@ -107,32 +107,6 @@ let experimentalColorA = new THREE.Color(experimentalColorAHex);
 let experimentalColorBHex = 0xACB6E5;
 let experimentalColorB = new THREE.Color(experimentalColorBHex);
 
-// let shadingAlgorithm = [
-//     {
-//         WireFrame: 0,  /**/
-//         Flat: 1,
-//         Normal: 2,      /* OK */
-//         Glow: 3,      /* OK */
-//         Toon: 4,      /* OK */
-//         Phong: 5,
-//         Lambert: 6,
-//         Gourard: 7,
-//         Texture: 8,
-//
-//     },
-// ];
-// let shadingAlgorithmString = [
-//     'WireFrame',
-//     'Flat',
-//     'Normal',
-//     'Glow',
-//     'Toon',
-//     'Phong',
-//     'Lambert',
-//     'Gourard',
-//     'Texture',
-// ];
-
 let customShadingAlgorithm = [
     {
         Diffuse: 0,  /**/
@@ -159,12 +133,17 @@ let customShadingAlgorithmString = [
 
 function addControls(controlObject) {
     gui = new GUI();
-    gui.add(controlObject, 'rotationSpeed', -0.01, 0.01).step(0.001);
-    gui.add(controlObject, 'doScale').name('Apply Scale');
-    gui.add(controlObject, 'scale', 0, 2).step(0.1).onChange(updateScale);
 
+    // controls the shader type
     gui.add(controlObject, 'Shader', customShadingAlgorithm[0]).onChange(updateShaderType);
 
+    // controls for the meshes, like scale and rotation
+    let objControlls = gui.addFolder('Mesh Controls');
+    objControlls.add(controlObject, 'rotationSpeed', -0.01, 0.01).step(0.001);
+    objControlls.add(controlObject, 'doScale').name('Apply Scale');
+    objControlls.add(controlObject, 'scale', 0, 2).step(0.1).onChange(updateScale);
+
+    // controls for glow shader
     let glowControls = gui.addFolder('Glow Controls');
     glowControls.addColor(controlObject, 'glowColorHex').name('Glow Color').onChange(function (color) {
         glowColorHex = color;
@@ -177,6 +156,7 @@ function addControls(controlObject) {
         updateGlowShader();
     });
 
+    // controls for toon shader
     let toonControls = gui.addFolder('Toon Controls');
     toonControls.addColor(controlObject, 'toonColorHex').name('Color').onChange(function (color) {
         toonColorHex = color;
@@ -196,8 +176,8 @@ function addControls(controlObject) {
         updateToonShader();
     });
 
+    // controls for phong shader
     let phongControls = gui.addFolder('Phong Controls');
-    // let phongAmbientFolder = phongControls.addFolder('Ambient');
     phongControls.add(controlObject, 'phongIsAmbientEnabled').name('Enable Ambient').onChange(function (value) {
         phongIsAmbientEnabled = value;
         updatePhongShader();
@@ -225,26 +205,10 @@ function addControls(controlObject) {
         phongSpecular = new THREE.Color(phongSpecularHex);
         updatePhongShader();
     });
-    // phongAmbientFolder.add(controlObject, 'phongAmbientX', 0, 1).name('Ambient X').step(0.05).onChange(function (value) {
-    //     phongAmbientX = value;
-    //     phongAmbient.x = phongAmbientX;
-    //     updatePhongShader();
-    // });
-    // phongAmbientFolder.add(controlObject, 'phongAmbientY', 0, 1).name('Ambient Y').step(0.05).onChange(function (value) {
-    //     phongAmbientY = value;
-    //     phongAmbient.y = phongAmbientY;
-    //     updatePhongShader();
-    // });
-    // phongAmbientFolder.add(controlObject, 'phongAmbientZ', 0, 1).name('Ambient Z').step(0.05).onChange(function (value) {
-    //     phongAmbientZ = value;
-    //     phongAmbient.z = phongAmbientZ;
-    //     updatePhongShader();
-    // });
-    // let phongDiffuseFolder = phongControls.addFolder('Diffuse');
 
     // ADD THE LAST 3 VARIABLES FOR PHONG SHADING
 
-
+    // controls for lambert shader
     let lambertControls = gui.addFolder('Lambert Controls');
     lambertControls.addColor(controlObject, 'lambertColorHex').name('Color').onChange(function (color) {
         lambertColorHex = color;
@@ -252,6 +216,7 @@ function addControls(controlObject) {
         updateLambertShader();
     });
 
+    // controls for experimental shader
     let experimentalControls = gui.addFolder('Experimental Controls');
     experimentalControls.addColor(controlObject, 'experimentalColorAHex').name('Color A').onChange(function (color) {
         experimentalColorAHex = color;
@@ -263,10 +228,9 @@ function addControls(controlObject) {
         experimentalColorB = new THREE.Color(experimentalColorBHex);
         updateExperimentalShader();
     });
-
-
 }
 
+// the function to update the type of shader on all the objects. This function is called from the GUI controller
 function updateShaderType(value) {
     shading = value;
     for (let i = 0; i < objArray.length; i++) {
@@ -277,31 +241,30 @@ function updateShaderType(value) {
     } // for
 }
 
+// update the scale. This function is called from the GUI controller
 function updateScale(value) {
     scale = value;
 }
 
-
+// update the glow shader with the new variables and recompile it. This function is called from the GUI controller
 function updateGlowShader() {
     let glowPos = 3;
-
     let newGlowShader = glowShaderMaterial();
     materialsArray.splice(glowPos, 1, newGlowShader);
     if (shading == glowPos)
         updateShaderType(shading);
 }
 
+// update the Lambert shader with the new variables and recompile it. This function is called from the GUI controller
 function updateLambertShader() {
     let lamPos = 6;
-
     let newLambertShader = lambertShaderMaterial();
-    // let libraryLambertShader;
     materialsArray.splice(lamPos, 1, newLambertShader);
-    // threejsMaterialsArray.splice(lamPos, 1, libraryLambertShader);
     if (shading == lamPos)
         updateShaderType(shading);
 }
 
+// update the toon shader with the new variables and recompile it. This function is called from the GUI controller
 function updateToonShader() {
     let toonPos = 4;
     let newToonShader = toonShaderMaterial();
@@ -313,42 +276,35 @@ function updateToonShader() {
         updateShaderType(shading);
 }
 
+// update the phong shader with the new variables and recompile it. This function is called from the GUI controller
 function updatePhongShader() {
     let phongPos = 5;
     let newPhongShader = phongShaderMaterial();
     let libPhongShader = setLibraryPhongShader();
     materialsArray.splice(phongPos, 1, newPhongShader);
     threejsMaterialsArray.splice(phongPos, 1, libPhongShader);
-
     if (shading == phongPos)
         updateShaderType(shading);
 }
 
+// update the experimental shader with the new variables and recompile it. This function is called from the GUI controller
 function updateExperimentalShader() {
     let expPos = 7;
     let newExperimentalShader = experimentalShaderMaterial();
     let libExpShader = setLibraryExperimentalShader();
     materialsArray.splice(expPos, 1, newExperimentalShader);
     threejsMaterialsArray.splice(expPos, 1, libExpShader);
-
     if (shading == expPos)
         updateShaderType(shading);
 }
 
-
-
-
-
-// using the code as a string from  app.html --
-function addBuiltInShadersTeapot()  // comparison teapot using library routines
-{
+// create all the three.js shader objects
+function addBuiltInShadersTeapot() {
+    // create the three.js library geometries
     createGeometries();
 
+    // create the three.js library shaders
     createThreejsShaders();
-
-    //console.log("inShader:" + shadingAlgorithmString[shading]);
-
-
 
     // Create Meshes
     mainTeapot = new THREE.Mesh(teapotGeo, threejsMaterialsArray[shading]);
@@ -366,28 +322,26 @@ function addBuiltInShadersTeapot()  // comparison teapot using library routines
     threejsObjArray.push(mainTorus);
     threejsObjArray.push(mainTorusKnot);
 
-
+    // add the objects to the scene
     for (let i = 0; i < threejsObjArray.length; i++ ) {
         scene.add(threejsObjArray[i]);
         threejsObjArray[i].position.z = -8;
     }
 
-    // set obj positions
+    // set obj x positions
     mainTeapot.position.x = 0 * scale;
     mainCube.position.x = -3 * scale;
     mainSphere.position.x = -5 * scale;
     mainCylinder.position.x = -7 * scale;
     mainTorus.position.x = 4 * scale;
     mainTorusKnot.position.x = 8 * scale;
+} // addBuiltInShadersTeapot
 
-}
-
+// create the three.js shaders
 function createThreejsShaders() {
-    let materialColor = new THREE.Color(0xffffff);
-    // materialColor.setRGB(1.0, 0.8, 0.6);
+    let materialColor = new THREE.Color(0xffffff); // white
 
     // TEXTURE MAP
-    // textureMap = new THREE.TextureLoader().load('textures/uv_grid_opengl.jpg');
     textureMap = new THREE.TextureLoader().load('textures/Grass.jpeg');
     textureMap.wrapS = textureMap.wrapT = THREE.RepeatWrapping;
     textureMap.anisotropy = 16;
@@ -400,10 +354,8 @@ function createThreejsShaders() {
         path + "py.png", path + "ny.png",
         path + "pz.png", path + "nz.png"
     ];
-
     let textureCube = new THREE.CubeTextureLoader().load(urls);
     textureCube.encoding = THREE.sRGBEncoding;
-
 
     // Gourard
     threejsMaterialsArray.push(new THREE.MeshLambertMaterial({color: materialColor, side: THREE.DoubleSide}));
@@ -427,15 +379,9 @@ function createThreejsShaders() {
     let wire = setLibraryExperimentalShader();
     threejsMaterialsArray.push(wire);
 
-    // let flatMaterial = new THREE.MeshPhongMaterial({
-    //     color: materialColor,
-    //     specular: 0x000000,
-    //     flatShading: true,
-    //     side: THREE.DoubleSide
-    // });
-    // threejsMaterialsArray.push(flatMaterial);
-}
+} // createThreejsShaders()
 
+// create the three.js library toon shader and return it
 function setLibraryToonShader() {
     let fiveTone = new THREE.TextureLoader().load('textures/fiveTone.jpg');
     fiveTone.minFilter = THREE.NearestFilter;
@@ -443,19 +389,25 @@ function setLibraryToonShader() {
     let toon = new THREE.MeshToonMaterial({color: toonColor, gradientMap: fiveTone});
     return toon;
 }
+
+// create the three.js library phong shader and return it
 function setLibraryPhongShader() {
     return new THREE.MeshPhongMaterial({color: phongAmbient, side: THREE.DoubleSide});
 }
+
+// create the three.js library lambert shader and return it
 function setLibraryLambertShader() {
     return new THREE.MeshLambertMaterial({color: lambertColor, side: THREE.DoubleSide});
 }
+
+// create the three.js library Wire shader and return it
 function setLibraryExperimentalShader() {
     let wireMaterial = new THREE.MeshBasicMaterial({color: experimentalColorA, wireframe: true});
     wireMaterial.needsUpdate = true;
     return wireMaterial;
 }
 
-
+// create my custom shader objects and add them to the scene
 function addCustomShadersShapes() {
 
     // create Materials
@@ -480,13 +432,10 @@ function addCustomShadersShapes() {
     objArray.push(mainTorus);
     objArray.push(mainTorusKnot);
 
-    // add meshes to scene
-    scene.add(mainTeapot);
-    scene.add(mainCube);
-    scene.add(mainSphere);
-    scene.add(mainCylinder);
-    scene.add(mainTorus);
-    scene.add(mainTorusKnot);
+    // add the objects to the scene
+    for (let i = 0; i < objArray.length; i++ ) {
+        scene.add(objArray[i]);
+    } // for
 
     // set obj positions
     mainTeapot.position.x = 0 * scale;
@@ -495,19 +444,19 @@ function addCustomShadersShapes() {
     mainCylinder.position.x = -7 * scale;
     mainTorus.position.x = 4 * scale;
     mainTorusKnot.position.x = 8 * scale;
+} // addCustomShadersShapes()
 
-}
-
+// create the geometires of the shapes to add
 function createGeometries() {
-
     teapotGeo = new TeapotBufferGeometry(1 * scale, -1, true, true, true, true);
     cubeGeo = new THREE.BoxGeometry(1 * scale, 1 * scale, 1 * scale);
     sphereGeo = new THREE.SphereGeometry(1 * scale/1.2, 32, 16);
     cylinderGeo = new THREE.CylinderGeometry( 0, 1*scale/2, 3, 32 );
     torusGeo = new THREE.TorusGeometry( scale, 1*scale/2.5, 15, 50 );
     torusKnotGeo = new THREE.TorusKnotGeometry( scale, 1*scale/3, 100, 16 );
-}
+} // createGeometries()
 
+// create my custom materials and add them to the array
 function createArrayOfMaterials() {
     // let texturePath = 'textures/crate.gif';
     // let texturePath = 'textures/Cobblestone.jpeg';
@@ -521,32 +470,22 @@ function createArrayOfMaterials() {
     materialsArray.push(phongShaderMaterial());
     materialsArray.push(lambertShaderMaterial());
     materialsArray.push(experimentalShaderMaterial());
+} // createArrayOfMaterials()
 
-}
+// tester function for phong shader
+// function addPhongTeapot() {
+//     const teapotGeometry2 = new TeapotBufferGeometry(1 * scale, -1, true, true, true, true);
+//     let itemMaterial = phongShaderMaterial();
+//     otherTeapot = new THREE.Mesh(teapotGeometry2, itemMaterial);
+//     scene.add(otherTeapot);
+//     teapotObjects.push(otherTeapot);
+//     otherTeapot.position.x = -6 * scale;
+// }
 
-
-// using the code as a string from  app.html --
-function addPhongTeapot() {
-    let teapotSize = 1 * scale;
-    let tess = -1;	// force initialization
-
-    const teapotGeometry2 = new TeapotBufferGeometry(teapotSize, tess, true, true, true, true);
-
-    let itemMaterial = phongShaderMaterial();
-
-    otherTeapot = new THREE.Mesh(teapotGeometry2, itemMaterial);
-
-    scene.add(otherTeapot);
-    teapotObjects.push(otherTeapot);
-
-    otherTeapot.position.x = -6 * scale;
-}
-
+// create my custom phong shader material and return it
 function phongShaderMaterial() {
     return new THREE.ShaderMaterial({
-        //Optional, here you can supply uniforms and attributes
-        uniforms:
-            {
+        uniforms: {
                 ambientEnabled: {value: phongIsAmbientEnabled},
                 diffuseEnabled: {value: phongIsDiffuseEnabled},
                 specularEnabled: {value: phongIsSpecularEnabled},
@@ -559,119 +498,82 @@ function phongShaderMaterial() {
             },
         vertexShader: phongVertexShader(),
         fragmentShader: phongFragmentShader(),
-        // fragmentShader: lambertFragmentShader(),
-        // vertexShader: lambertVertexShader(),
     });
+} // phongShaderMaterial()
 
-}
+// tester function for diffuse shader
+// function addDiffuseShadingCube() {
+//     let material = diffuseShaderMaterial();
+//     let geometry = new THREE.BoxGeometry(1 * scale, 1 * scale, 1 * scale)
+//     let mesh = new THREE.Mesh(geometry, material);
+//     mesh.position.x = -2 * scale;
+//     scene.add(mesh)
+//     sceneObjects.push(mesh)
+// }
 
-// using the code as a string from  app.html --
-function addDiffuseShadingCube() {
-    // get from header - just another method.
-    // let vShader = document.getElementById('cubeVertexShader').innerHTML;
-    // let fShader = document.getElementById('cubeFragmentShader').innerHTML;
-
-    let material = diffuseShaderMaterial();
-
-    let geometry = new THREE.BoxGeometry(1 * scale, 1 * scale, 1 * scale)
-    let mesh = new THREE.Mesh(geometry, material);
-
-    mesh.position.x = -2 * scale;
-    scene.add(mesh)
-    sceneObjects.push(mesh)
-}
-
+// create my custom diffuse shader material and return it
 function diffuseShaderMaterial() {
     return new THREE.ShaderMaterial({
-        //Optional, here you can supply uniforms and attributes
+        uniforms: { uLightDirection: {value: phongLightPosition} },
         vertexShader: diffuseVertexShader(),
         fragmentShader: diffuseFragmentShader(),
     });
-}
+} // diffuseShaderMaterial
 
-function addNormalShadingSphere() {
-    // get from header - just another method.
-    // let vShader = document.getElementById('cubeVertexShader').innerHTML;
-    // let fShader = document.getElementById('cubeFragmentShader').innerHTML;
+// Tester function for normal shaders
+// function addNormalShadingSphere() {
+//     let material = normalShaderMaterial();
+//     let geometry = new THREE.SphereGeometry(1 * scale, 32, 16)
+//     let mesh = new THREE.Mesh(geometry, material);
+//     mesh.position.x = -10 * scale;
+//     scene.add(mesh)
+//     sceneObjects.push(mesh)
+// }
 
-    let material = normalShaderMaterial();
-
-    let geometry = new THREE.SphereGeometry(1 * scale, 32, 16)
-    let mesh = new THREE.Mesh(geometry, material);
-
-    mesh.position.x = -10 * scale;
-    scene.add(mesh)
-    sceneObjects.push(mesh)
-}
-
+// create my custom normal shader material and return it
 function normalShaderMaterial() {
     return new THREE.ShaderMaterial({
-        //Optional, here you can supply uniforms and attributes
         vertexShader: normalVertexShader(),
         fragmentShader: normalFragmentShader(),
     });
-}
+} // normalShaderMaterial
 
-function addGlowShadingSphere() {
-    // uniforms.glowColor ={type: 'vec3', value: new THREE.Vector3(0.8, 0.4, 0.1)}
-    // uniforms.glowColor = {type: 'vec3', value: new THREE.Vector3(0, 0, 1)}
-    // uniforms.matColor = {type: 'vec3', value: new THREE.Vector3(0.0, 0.0, 0.0)}
-    // uniforms.matColor = {type: 'vec3', value: new THREE.Vector3(1.0, 1.0, 1.0)}
+// tester function for glow shader
+// function addGlowShadingSphere() {
+//     let material = glowShaderMaterial();
+//     let geometry = new THREE.SphereGeometry(1 * scale, 32, 16)
+//     let mesh = new THREE.Mesh(geometry, material);
+//     mesh.position.z = -3 * scale;
+//     scene.add(mesh)
+//     sceneObjects.push(mesh)
+// }
 
-
-    let material = glowShaderMaterial();
-
-    let geometry = new THREE.SphereGeometry(1 * scale, 32, 16)
-    // let geometry = new THREE.BoxGeometry(1 * scale, 1 * scale, 1 * scale)
-
-    let mesh = new THREE.Mesh(geometry, material);
-
-    mesh.position.z = -3 * scale;
-    scene.add(mesh)
-    sceneObjects.push(mesh)
-}
-
+// create my custom glow shader material and return it
 function glowShaderMaterial() {
     return new THREE.ShaderMaterial({
-        //Optional, here you can supply uniforms and attributes
-        uniforms:
-            {
+        uniforms: {
                 glowColor: {type: 'vec3', value: glowColor},
                 matColor: {type: 'vec3', value: matColor}
             },
         vertexShader: glowVertexShader(),
         fragmentShader: glowFragmentShader(),
     });
-}
+} // glowShaderMaterial()
 
-function addToonShadingSphere() {
-    // get from header - just another method.
-    // let vShader = document.getElementById('cubeVertexShader').innerHTML;
-    // let fShader = document.getElementById('cubeFragmentShader').innerHTML;
+// tester function for toon shader
+// function addToonShadingSphere() {
+//    let material = toonShaderMaterial();
+//     let geometry = new THREE.SphereGeometry(1 * scale, 32, 16)
+//     let mesh = new THREE.Mesh(geometry, material);
+//     mesh.position.z = -6 * scale;
+//     scene.add(mesh)
+//     sceneObjects.push(mesh)
+// }
 
-
-    // uniforms.mainColor = {type: 'vec3', value: toonColor};
-    // uniforms.numLayers = {type: 'int', value: toonNumLayers};
-    // uniforms.startingBound = {type: 'float', value: toonStartingBound};
-    // uniforms.colorIntensityPerStep = {type: 'float', value: toonColorIntensityPerStep};
-
-
-    let material = toonShaderMaterial();
-
-    let geometry = new THREE.SphereGeometry(1 * scale, 32, 16)
-    // let geometry = new THREE.BoxGeometry(1 * scale, 1 * scale, 1 * scale)
-
-    let mesh = new THREE.Mesh(geometry, material);
-
-    mesh.position.z = -6 * scale;
-    scene.add(mesh)
-    sceneObjects.push(mesh)
-}
-
+// create my custom toon shader material and return it
 function toonShaderMaterial() {
     return new THREE.ShaderMaterial({
-        uniforms:
-            {
+        uniforms: {
                 mainColor: {type: 'vec3', value: toonColor},
                 numLayers: {type: 'int', value: toonNumLayers},
                 startingBound: {type: 'float', value: toonStartingBound},
@@ -680,155 +582,116 @@ function toonShaderMaterial() {
         vertexShader: toonVertexShader(),
         fragmentShader: toonFragmentShader(),
     });
-}
+} // toonshadermaterial()
 
+// tester function for lambert shader
+// function addLambertShadingSphere() {
+//     let material = lambertShaderMaterial();
+//     let geometry = new THREE.SphereGeometry(1 * scale, 32, 16)
+//     let mesh = new THREE.Mesh(geometry, material);
+//     mesh.position.z = 3 * scale;
+//     scene.add(mesh)
+//     sceneObjects.push(mesh)
+// }
 
-function addLambertShadingSphere() {
-    // get from header - just another method.
-    // let vShader = document.getElementById('cubeVertexShader').innerHTML;
-    // let fShader = document.getElementById('cubeFragmentShader').innerHTML;
-
-
-    let material = lambertShaderMaterial();
-
-    let geometry = new THREE.SphereGeometry(1 * scale, 32, 16)
-    // let geometry = new THREE.BoxGeometry(1 * scale, 1 * scale, 1 * scale)
-
-    let mesh = new THREE.Mesh(geometry, material);
-
-    mesh.position.z = 3 * scale;
-    scene.add(mesh)
-    sceneObjects.push(mesh)
-}
-
+// create my custom lambert shader material and return it
 function lambertShaderMaterial() {
     uniforms.lambertColor = {type: 'vec3', value: lambertColor}
     uniforms = THREE.UniformsUtils.merge([
         uniforms,
         THREE.UniformsLib['lights']
-    ])
+    ]);
 
     return new THREE.ShaderMaterial({
-        //Optional, here you can supply uniforms and attributes
         uniforms: uniforms,
         vertexShader: lambertVertexShader(),
         fragmentShader: lambertFragmentShader(),
         lights: true
-
     });
-}
+} // lambertShaderMaterial()
 
+// tester function for diffuse shader with texture
+// function addDiffuseShadingCubeWithTexture() {
+//     let itemMaterial = diffuseWithTextureShaderMaterial('textures/crate.gif');
+//     let geometry = new THREE.BoxGeometry(1 * scale, 1 * scale, 1 * scale)
+//     let mesh = new THREE.Mesh(geometry, itemMaterial); // use new material
+//     mesh.position.x = 0 * scale;
+//     scene.add(mesh)
+//     sceneObjects.push(mesh)
+// }
 
-// using the code as a string from  app.html -- using texture
-function addDiffuseShadingCubeWithTexture() // texture
-{
-    // either tex works.
-    //let tex = THREE.ImageUtils.loadTexture('textures/crate.gif');
-    // let tex = new THREE.TextureLoader().load('textures/crate.gif', render);
-    //optionally set some settings for it
-    //tex.magFilter = THREE.NearestFilter;
-
-
-    let itemMaterial = diffuseWithTextureShaderMaterial('textures/crate.gif');
-
-
-    let geometry = new THREE.BoxGeometry(1 * scale, 1 * scale, 1 * scale)
-    let mesh = new THREE.Mesh(geometry, itemMaterial); // use new material
-
-    mesh.position.x = 0 * scale;
-    scene.add(mesh)
-    sceneObjects.push(mesh)
-}
-
+// create my custom diffuse texture shader material and return it
 function diffuseWithTextureShaderMaterial(texturePath) {
     return new THREE.ShaderMaterial({
-        //Optional, here you can supply uniforms and attributes
-        uniforms:
-            {
-                theTexture: {type: 't', value: new THREE.TextureLoader().load(texturePath, render)}
-            },
+        uniforms: { theTexture: {type: 't', value: new THREE.TextureLoader().load(texturePath, render)}},
         vertexShader: diffuseVertexShader(),
         fragmentShader: diffuseFragmentShaderTexture(),
-        //Set transparent to true if your texture has some regions with alpha=0
-        transparent: true
+        transparent: true //Set transparent to true if your texture has some regions with alpha=0
     });
-}
+} //
 
+//  tester function for experimental shader
+// function addExperimentalShaderCube() {
+//     let geometry = new THREE.BoxGeometry(1 * scale, 1 * scale, 1 * scale)
+//     let material = experimentalShaderMaterial();
+//     let mesh = new THREE.Mesh(geometry, material)
+//     mesh.position.x = 2 * scale;
+//     scene.add(mesh)
+//     sceneObjects.push(mesh)
+// }
 
-function addExperimentalShaderCube() {
-    // uniforms.colorA = {type: 'vec3', value: new THREE.Color(0x74ebd5)}
-    // uniforms.colorB = {type: 'vec3', value: new THREE.Color(0xACB6E5)}
-
-    let geometry = new THREE.BoxGeometry(1 * scale, 1 * scale, 1 * scale)
-    let material = experimentalShaderMaterial();
-
-    let mesh = new THREE.Mesh(geometry, material)
-    mesh.position.x = 2 * scale;
-    scene.add(mesh)
-    sceneObjects.push(mesh)
-}
-
+// create my custom experimental shader material and return it
 function experimentalShaderMaterial() {
     return new THREE.ShaderMaterial({
-        uniforms:
-            {
+        uniforms: {
                 colorA: {type: 'vec3', value: experimentalColorA},
                 colorB: {type: 'vec3', value: experimentalColorB}
-            },
+        },
         fragmentShader: experimentalFragmentShader(),
         vertexShader: experimentalVertexShader(),
     });
 }
 
-
-// Old renderer  -----
+// renderer function
 function render() {
     renderer.render(scene, camera);
 }
 
-
-// Old helper grids -----
+// creates some helper grids for scale reference and orientation
 function createHelperGrids() {
     // Create a Helper Grid ---------------------------------------------
     let size = 200;
     let divisions = 200;
-
-    // Ground
+    // Ground grid
     let gridHelper = new THREE.GridHelper(size, divisions, 0xff5555, 0x444488);
     scene.add(gridHelper);
-    //
-    // //  Vertical
-    // let gridGround = new THREE.GridHelper(size, divisions, 0x55ff55, 0x667744);
-    // gridGround.rotation.x = Math.PI / 2;
-    // scene.add(gridGround);
-}
+} // createHelperGrids()
 
-
+// main animation loop
 function animationLoop(ts) {
     renderer.render(scene, camera)
 
-    // for (let object of objArray) {
     for (let i = 0; i < objArray.length; i++) {
         objArray[i].rotation.x += controls[0].rotationSpeed;
         objArray[i].rotation.y += controls[0].rotationSpeed;
         threejsObjArray[i].rotation.x += controls[0].rotationSpeed;
         threejsObjArray[i].rotation.y += controls[0].rotationSpeed;
-    }
-
+    } // for
     requestAnimationFrame(animationLoop)
-}
+} // animationLoop()
 
-
+// create cam controls
 function createCameraControls() {
     cameraControls = new OrbitControls(camera, renderer.domElement);
-}
+} // createCameraControls()
 
+// create the lights
 function createLights() {
     ambientLight = new THREE.AmbientLight(0x333333);	        // 0.2
     light = new THREE.DirectionalLight(0xFFFFFF, 1.0);
-}
+} // createLights()
 
-
+// add specific settings to the lights
 function adjustLighting() {
     let pointLight = new THREE.PointLight(0xdddddd)
     pointLight.position.set(-5, -3, 3)
@@ -836,8 +699,11 @@ function adjustLighting() {
 
     let ambientLight = new THREE.AmbientLight(0x505050)
     scene.add(ambientLight)
-}
+} // adjustLighting()
 
+/*
+ * The controller class for the GUI component
+ */
 class Controller {
     constructor(cube, controller) {
         this.cube = cube;
@@ -895,9 +761,9 @@ class Controller {
         this.phongLightIntensity = phongLightIntensity;
         this.phongLightPosition = phongLightPosition;
         this.phongShininess = phongShininess;
-    }
+    } // constructor
 
-
+    // applies the scaling matrix to the objects in the scene
     doScale() {
         for (let i = 0; i < objArray.length; i++) {
             let matrix = new THREE.Matrix4();
@@ -914,9 +780,9 @@ class Controller {
             threejsObjArray[i].geometry.verticesNeedUpdate = true;
         } // for
     } // doScale
-}
+} // controller class
 
-
+// the init function to get everything started.
 function init() {
     scene = new THREE.Scene();
     scene.background = new THREE.Color(0x555555);
@@ -934,25 +800,9 @@ function init() {
 
     createLights();
 
-    // addDiffuseShadingCube();             // on left = -2*scale;
-    //
-    // addDiffuseShadingCubeWithTexture();      // middle cube
-    //
-    // addExperimentalShaderCube();      // on right
-
     addBuiltInShadersTeapot();          // addTheeJSTeapot : rightmost
 
     addCustomShadersShapes();
-
-    // addPhongTeapot();         // shader teapot.
-    //
-    // addNormalShadingSphere();
-    //
-    // addGlowShadingSphere();
-    //
-    // addToonShadingSphere();
-    //
-    // addLambertShadingSphere();
 
     controls = [];
     controls.push(new Controller(mainTeapot, 0));
@@ -964,7 +814,7 @@ function init() {
 
     animationLoop();
 
-}
+} // init()
 
 // =====================================================================================================================
 // Shaders (Vertex and Fragment)
@@ -1045,7 +895,9 @@ function diffuseFragmentShader() {
 		void main() {
             //Create a vector to determine where light comes from
   			// (similar to directional light in this case)
-  			vec3 light = vec3(0.5, 0.2, 1.0);
+  			//vec3 light = vec3(0.5, 0.2, 1.0);
+  			vec3 light = vec3(0.5, -0.4, 1.0);
+  			// vec3 light = uLightDirection;
 
   			//Normalize it
   			//shrinks all x,y and z all three values of the vector down to a value between 0 and 1.
@@ -1355,35 +1207,6 @@ function toonFragmentShader() {
     `
 }
 
-// --------------------------------------------------
-// Some Shader
-// --------------------------------------------------
-// function flatVertexShader() {
-//     return `
-//         flat out vec4 polygon_color;
-//
-//        
-//         void main() {
-//             vec3 ambient = vec3(0.9,0.3,0.9);
-//             vec3 diffuse = vec3(0.9,0.5,0.3);
-//             vec3 specular = vec3(0.8,0.8,0.8);
-//        
-//             polygon_color = vec4(normalize(ambient + diffuse + specular), 1.0);
-//             gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );
-//         }
-//     `
-// }
-//
-// function flatFragmentShader() {
-//     return `
-//         flat in vec4 polygon_color;
-//    
-//         void main() {
-// 			// lerp between the glowColor and matColor based on the normal's z value
-//   			gl_FragColor = polygon_color;
-// 		}
-//     `
-// }
 
-
+// Call the init function
 init();
